@@ -20,6 +20,15 @@ export class MenuController {
     ) {
         return this.menuService.findAll(category, foodType, search);
     }
+    
+    @Get('admin')
+findAllForAdmin(
+  @Query('category') category?: string,
+  @Query('foodType') foodType?: string,
+  @Query('search') search?: string,
+) {
+  return this.menuService.findAllForAdmin(category, foodType, search);
+}
 
     @Get(':id')
     findOne(@Param('id') id: string) {

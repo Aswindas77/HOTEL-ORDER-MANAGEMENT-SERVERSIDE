@@ -90,4 +90,20 @@ export class MenuService {
         menu.isAvailable = true;
         return menu.save();
     }
+  
+    async findAllForAdmin(
+  category?: string,
+  foodType?: string,
+  search?: string,
+) {
+  const filter: any = {};
+
+  if (category) filter.category = category;
+  if (foodType) filter.foodType = foodType;
+  if (search) {
+    filter.name = { $regex: search, $options: 'i' };
+  }
+
+  return this.menuModel.find(filter);
+}
 }
