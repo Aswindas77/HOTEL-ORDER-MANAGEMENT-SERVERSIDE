@@ -45,4 +45,9 @@ export class TablesController {
     close(@Param('id') id: string) {
         return this.tablesService.closeTable(id);
     }
+
+    @Get('verify/:token')
+    verifyTable(@Param('token') token: string) {
+        return this.tablesService.verifyByToken(token);
+    }
 }

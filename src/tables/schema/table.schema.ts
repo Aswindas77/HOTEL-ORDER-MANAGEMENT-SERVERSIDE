@@ -13,6 +13,9 @@ export class Table {
   @Prop({ required: true })
   capacity: number;
 
+  @Prop({ required: true, unique: true })
+  accessToken: string;
+
   @Prop({ enum: TableStatus, default: TableStatus.AVAILABLE })
   status: TableStatus;
 
