@@ -1,4 +1,4 @@
-import { IsArray, IsEnum, IsMongoId, IsNumber, IsOptional, ValidateNested, } from 'class-validator';
+import { IsArray, IsEnum, IsMongoId, IsNumber, IsOptional, IsString, ValidateNested, } from 'class-validator';
 import { Type } from 'class-transformer';
 import { OrderType } from 'src/infrastructure/enums/order-status.enum';
 
@@ -13,8 +13,8 @@ export class OrderItemDto {
 
 export class CreateOrderDto {
 
-    @IsOptional()
-    tableNumber?: string;
+    @IsString()
+    tableToken: string;
 
     @IsArray()
     @ValidateNested({ each: true })

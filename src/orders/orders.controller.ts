@@ -31,12 +31,23 @@ export class OrderController {
   }
 
   @Get('chef')
-  chefOrders(
-    @Query('page') page: number = 1,
-    @Query('limit') limit: number = 10,
-  ) {
-    return this.orderService.getChefOrders(page, limit);
-  }
+chefOrders(
+  @Query('page') page?: string,
+  @Query('limit') limit?: string,
+  @Query('search') search?: string,
+  @Query('status') status?: OrderStatus,
+  @Query('startDate') startDate?: string,
+  @Query('endDate') endDate?: string,
+) {
+  return this.orderService.getChefOrders(
+    Number(page),
+    Number(limit),
+    search,
+    status,
+    startDate,
+    endDate,
+  );
+}
 
   @Get('manager')
   managerOrders(

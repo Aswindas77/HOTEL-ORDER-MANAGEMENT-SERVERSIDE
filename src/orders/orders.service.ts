@@ -5,6 +5,7 @@ import { Order, OrderDocument } from './schema/orders.schema';
 import { Menu, MenuDocument } from 'src/menu/schema/menu.schema';
 import { CreateOrderDto } from './dto/create-order.dto';
 import { OrderStatus, OrderType, PaymentStatus } from 'src/infrastructure/enums/order-status.enum';
+import { Table, TableDocument } from 'src/tables/schema/table.schema';
 
 
 @Injectable()
@@ -15,10 +16,26 @@ export class OrderService {
 
         @InjectModel(Menu.name)
         private menuModel: Model<MenuDocument>,
+
+        @InjectModel(Table.name)
+        private tableModel: Model<TableDocument>,
     ) { }
 
 
     async create(dto: CreateOrderDto) {
+
+        if (!dto.tableToken) {
+            throw new BadRequestException('Table token required');
+        }
+
+        const table = await this.tableModel.findOne({
+            accessToken: dto.tableToken.toLowerCase(),
+            isActive: true
+        });
+
+        if (!table) {
+            throw new BadRequestException('Invalid or inactive table');
+        }
 
         if (!dto.items || dto.items.length === 0) {
             throw new BadRequestException('Items required');
@@ -77,6 +94,7 @@ export class OrderService {
 
         return this.orderModel.create({
             orderNumber: `ORD-${Date.now()}`,
+            tableNumber: table.tableNumber,
             tokenNumber,
             items,
             subtotal,
@@ -169,26 +187,73 @@ export class OrderService {
 
 
 
-    async getChefOrders(page: number = 1, limit: number = 10) {
-        const skip = (page - 1) * limit;
+    async getChefOrders(
+        page?: number,
+        limit?: number,
+        search?: string,
+        status?: OrderStatus,
+        startDate?: string,
+        endDate?: string,
+    ) {
 
-        const filter = {
-            status: { $in: [OrderStatus.PENDING, OrderStatus.PREPARING] },
-        };
+        const currentPage = page && page > 0 ? page : 1;
+        const currentLimit = limit && limit > 0 ? limit : 10;
+        const skip = (currentPage - 1) * currentLimit;
+
+
+        const filter: any = {};
+
+        const chefStatuses = [
+            OrderStatus.PENDING,
+            OrderStatus.PREPARING,
+            OrderStatus.READY
+        ];
+
+        
+        filter.status = status
+            ? status
+            : { $in: chefStatuses };
+
+        // 🔎 Search by tableNumber or tokenNumber
+        if (search) {
+
+            const numeric = Number(search);
+
+            filter.$or = [
+                { tableNumber: { $regex: search, $options: 'i' } },
+                { orderNumber: { $regex: search, $options: 'i' } },
+                { "items.name": { $regex: search, $options: "i" } },
+                ...(Number.isNaN(numeric) ? [] : [{ tokenNumber: numeric }])
+            ];
+
+        }
+
+        // 📅 Date filter
+        if (startDate || endDate) {
+            filter.createdAt = {};
+            if (startDate) {
+                filter.createdAt.$gte = new Date(startDate);
+            }
+            if (endDate) {
+                filter.createdAt.$lte = new Date(endDate);
+            }
+        }
 
         const [orders, total] = await Promise.all([
             this.orderModel
                 .find(filter)
                 .sort({ createdAt: 1 })
                 .skip(skip)
-                .limit(limit),
+                .limit(currentLimit),
+
             this.orderModel.countDocuments(filter),
         ]);
 
         return {
             total,
-            page,
-            totalPages: Math.ceil(total / limit),
+            page: currentPage,
+            limit: currentLimit,
+            totalPages: Math.ceil(total / currentLimit),
             data: orders,
         };
     }

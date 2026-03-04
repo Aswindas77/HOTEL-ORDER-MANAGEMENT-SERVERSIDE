@@ -15,7 +15,7 @@ export class Order {
     tokenNumber: number;
 
     @Prop()
-    tableNumber?: string;
+    tableNumber: string;
 
     @Prop([
         {

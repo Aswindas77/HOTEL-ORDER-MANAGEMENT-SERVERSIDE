@@ -5,6 +5,7 @@ import { Table, TableDocument } from './schema/table.schema';
 import { CreateTableDto } from './dto/create-table.dto';
 import { UpdateTableDto } from './dto/update-table.dto';
 import { TableStatus } from 'src/infrastructure/enums/tableStatus.enums';
+import { randomBytes } from 'crypto';
 
 @Injectable()
 export class TablesService {
@@ -22,7 +23,12 @@ export class TablesService {
             throw new BadRequestException('Table number already exists');
         }
 
-        const table = new this.tableModel(createTableDto);
+        const accessToken = randomBytes(16).toString('hex');
+
+        const table = new this.tableModel({
+            ...createTableDto,
+            accessToken
+        });
         return table.save();
     }
 
@@ -97,6 +103,22 @@ export class TablesService {
         table.status = TableStatus.AVAILABLE;
 
         return table.save();
+    }
+
+    async verifyByToken(token: string) {
+
+        const table = await this.tableModel.findOne({
+            accessToken: token,
+            isActive: true
+        });
+
+        if (!table) {
+            throw new NotFoundException('Invalid table');
+        }
+
+        return {
+            tableNumber: table.tableNumber
+        };
     }
 
 }
