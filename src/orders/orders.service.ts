@@ -304,6 +304,7 @@ export class OrderService {
             filter.$or = [
                 { orderNumber: { $regex: search, $options: 'i' } },
                 { tokenNumber: Number(search) || 0 },
+                { "items.name": { $regex: search, $options: "i" } }
             ];
         }
 

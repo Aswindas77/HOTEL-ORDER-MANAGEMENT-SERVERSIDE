@@ -32,9 +32,42 @@ export class TablesService {
         return table.save();
     }
 
-    async findAll() {
-        return this.tableModel.find({ isActive: true });
-    }
+async findAll(
+  page = 1,
+  limit = 12,
+  search?: string,
+  status?: TableStatus,
+) {
+
+  const query: any = { isActive: true };
+
+  if (search) {
+    query.tableNumber = { $regex: search, $options: 'i' };
+  }
+
+  if (status) {
+    query.status = status;
+  }
+
+  const skip = (page - 1) * limit;
+
+  const [tables, total] = await Promise.all([
+    this.tableModel
+      .find(query)
+      .skip(skip)
+      .limit(limit)
+      .sort({ createdAt: -1 }),
+
+    this.tableModel.countDocuments(query),
+  ]);
+
+  return {
+    data: tables,
+    total,
+    page,
+    totalPages: Math.ceil(total / limit),
+  };
+}
 
     async findOne(id: string) {
         const table = await this.tableModel.findById(id);

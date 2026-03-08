@@ -30,6 +30,7 @@ import { DashboardModule } from './dashboard/dashboard.module';
     PaymentsModule,
     MenuModule,
     DashboardModule,
+    CategoriesModule,
   ],
   controllers: [],
   providers: [],

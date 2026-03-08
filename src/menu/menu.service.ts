@@ -5,12 +5,14 @@ import { Model } from 'mongoose';
 import { CreateMenuDto } from './dto/create-menu.dto';
 import { UpdateMenuDto } from './dto/update-menu.dto';
 import { Menu, MenuDocument } from './schema/menu.schema';
+import { CategoriesService } from './categories/categories.service';
 
 @Injectable()
 export class MenuService {
     constructor(
         @InjectModel(Menu.name)
         private menuModel: Model<MenuDocument>,
+        private categoriesservice: CategoriesService,
     ) { }
 
 

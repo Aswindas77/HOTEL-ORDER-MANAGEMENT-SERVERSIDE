@@ -36,9 +36,53 @@ export class UsersService {
     }
 
 
-    async findAll() {
-        return this.userModel.find().select('-password');
-    }
+async findAll(
+  page = 1,
+  limit = 10,
+  search?: string,
+  role?: string,
+  status?: boolean,
+) {
+
+  const query: any = {};
+
+  // Search by name or email
+  if (search) {
+    query.$or = [
+      { name: { $regex: search, $options: 'i' } },
+      { email: { $regex: search, $options: 'i' } },
+    ];
+  }
+
+  // Role filter
+  if (role) {
+    query.role = role;
+  }
+
+  // Status filter
+  if (status !== undefined) {
+    query.isActive = status;
+  }
+
+  const skip = (page - 1) * limit;
+
+  const users = await this.userModel
+    .find(query)
+    .select('-password')
+    .skip(skip)
+    .limit(limit)
+    .sort({ createdAt: -1 });
+
+  const total = await this.userModel.countDocuments(query);
+
+  return {
+    data: users,
+    total,
+    page,
+    limit,
+    totalPages: Math.ceil(total / limit),
+  };
+}
 
 
     async findOne(id: string) {

@@ -14,8 +14,8 @@ export class CreateMenuDto {
     @Min(0)
     price: number;
 
-    @IsEnum(MenuCategory)
-    category: MenuCategory;
+    @IsString()
+    category: string;
 
     @IsEnum(FoodType)
     foodType: FoodType;
