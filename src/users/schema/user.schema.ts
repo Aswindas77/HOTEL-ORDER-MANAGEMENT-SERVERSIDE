@@ -1,5 +1,5 @@
 import { Prop, Schema, SchemaFactory } from '@nestjs/mongoose';
-import { Document } from 'mongoose';
+import { Document, Types } from 'mongoose';
 import { Role } from 'src/infrastructure/enums/role.enums';
 
 
@@ -22,6 +22,9 @@ export class User {
 
   @Prop({ default: true })
   isActive: boolean;
+
+  @Prop({ type: Types.ObjectId, ref: 'Hotel', default: null })
+  hotelId: Types.ObjectId;
 }
 
 export const UserSchema = SchemaFactory.createForClass(User);
