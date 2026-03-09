@@ -23,13 +23,4 @@ export class CreateMenuDto {
     @IsOptional()
     @IsBoolean()
     isAvailable?: boolean;
-
-    @IsOptional()
-    @IsString()
-    image?: string;
-
-    @IsOptional()
-    @IsNumber()
-    @Min(1)
-    preparationTime?: number;
 }

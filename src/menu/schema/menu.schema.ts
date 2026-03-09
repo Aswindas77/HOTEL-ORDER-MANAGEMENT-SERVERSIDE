@@ -16,8 +16,8 @@ export class Menu {
   @Prop({ required: true, min: 0 })
   price: number;
 
-  @Prop({ enum: MenuCategory, required: true })
-  category: MenuCategory;
+  @Prop({ required: true })
+  category: string;
 
   @Prop({ enum: FoodType, required: true })
   foodType: FoodType;
@@ -25,11 +25,7 @@ export class Menu {
   @Prop({ default: true })
   isAvailable: boolean;
 
-  @Prop()
-  image?: string;
 
-  @Prop({ min: 1 })
-  preparationTime?: number;
 }
 
 export const MenuSchema = SchemaFactory.createForClass(Menu);
