@@ -6,10 +6,12 @@ import { TablesModule } from './tables/tables.module';
 import { CategoriesModule } from './categories/categories.module';
 import { MenuModule } from './menu/menu.module';
 import { OrdersModule } from './orders/orders.module';
-import { PaymentsModule } from './payments/payments.module';
 import { MongooseModule } from '@nestjs/mongoose';
 import { ConfigModule, ConfigService } from '@nestjs/config';
 import { DashboardModule } from './dashboard/dashboard.module';
+import { BranchModule } from './branch/branch.module';
+import { SubscriptionModule } from './subscription/subscription.module';
+import { ActivationRequestModule } from './activation-request/activation-request.module';
 
 @Module({
   imports: [
@@ -27,10 +29,12 @@ import { DashboardModule } from './dashboard/dashboard.module';
     CategoriesModule,
     MenuModule,
     OrdersModule,
-    PaymentsModule,
     MenuModule,
     DashboardModule,
     CategoriesModule,
+    BranchModule,
+    SubscriptionModule,
+    ActivationRequestModule,
   ],
   controllers: [],
   providers: [],

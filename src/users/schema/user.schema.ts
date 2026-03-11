@@ -17,11 +17,23 @@ export class User {
   @Prop({ required: true })
   password: string;
 
+  @Prop({ trim: true })
+  phone: string;
+
   @Prop({ enum: Role, required: true })
   role: Role;
 
   @Prop({ default: true })
   isActive: boolean;
+
+  @Prop({ default: false })
+  isEmailVerified: boolean;
+
+  @Prop({ default: 1 })
+  setupStep: number;
+
+  @Prop({ default: null })
+  lastLogin: Date;
 
   @Prop({ type: Types.ObjectId, ref: 'Hotel', default: null })
   hotelId: Types.ObjectId;

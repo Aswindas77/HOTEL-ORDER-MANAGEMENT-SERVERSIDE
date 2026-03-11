@@ -1,14 +1,21 @@
-import { Controller, Post, Body, Get, Param } from '@nestjs/common';
+import { Controller, Post, Body, Get, Param, Req } from '@nestjs/common';
 import { HotelService } from './hotel.service';
+import { CreateHotelDto } from './dto/create-hotel.dto';
 
 @Controller('hotels')
 export class HotelController {
 
-  constructor(private hotelService: HotelService) {}
+  constructor(private readonly hotelService: HotelService) {}
 
   @Post()
-  createHotel(@Body() body: any) {
-    return this.hotelService.createHotel(body);
+  createHotel(
+    @Body() body: CreateHotelDto,
+    @Req() req
+  ) {
+
+    const userId = req.user.id;
+
+    return this.hotelService.createHotel(body, userId);
   }
 
   @Get()

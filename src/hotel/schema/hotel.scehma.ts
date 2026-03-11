@@ -1,22 +1,25 @@
 import { Prop, Schema, SchemaFactory } from '@nestjs/mongoose';
-import { Document } from 'mongoose';
+import { Document, Types } from 'mongoose';
 
 export type HotelDocument = Hotel & Document;
 
 @Schema({ timestamps: true })
 export class Hotel {
 
-  @Prop({ required: true })
+  @Prop({ required: true, trim: true })
   name: string;
 
-  @Prop({ required: true })
-  email: string;
+  @Prop({ trim: true })
+  email?: string;
 
-  @Prop()
-  phone: string;
+  @Prop({ trim: true })
+  phone?: string;
 
-  @Prop()
-  address: string;
+  @Prop({ trim: true })
+  description?: string;
+
+  @Prop({ type: Types.ObjectId, ref: 'User', required: true })
+  ownerId: Types.ObjectId;
 
   @Prop({ default: true })
   isActive: boolean;
