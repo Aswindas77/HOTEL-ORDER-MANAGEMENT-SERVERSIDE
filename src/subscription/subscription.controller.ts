@@ -5,17 +5,15 @@ import { CreateSubscriptionDto } from './dto/create-subscription.dto';
 @Controller('subscriptions')
 export class SubscriptionController {
 
-  constructor(private readonly subscriptionService: SubscriptionService) {}
+  constructor(private readonly subscriptionService: SubscriptionService) { }
 
   @Post()
-  createSubscription(
-    @Body() body: CreateSubscriptionDto,
-    @Req() req
-  ) {
+  createSubscription(@Body() body: CreateSubscriptionDto) {
 
-    const hotelId = req.user?.hotelId || "TEMP_HOTEL_ID";
+    const hotelId = body.hotelId;
 
     return this.subscriptionService.createSubscription(body, hotelId);
+
   }
 
   @Get()

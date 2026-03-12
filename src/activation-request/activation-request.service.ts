@@ -15,7 +15,8 @@ export class ActivationRequestService {
 
     const request = new this.activationModel({
       hotelId: new Types.ObjectId(hotelId),
-      subscriptionId: new Types.ObjectId(subscriptionId)
+      subscriptionId: new Types.ObjectId(subscriptionId),
+      status: 'pending'
     });
 
     return request.save();

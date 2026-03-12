@@ -10,13 +10,13 @@ export class BranchService {
   constructor(
     @InjectModel(Branch.name)
     private branchModel: Model<BranchDocument>,
-  ) {}
+  ) { }
 
-  async createBranch(createBranchDto: CreateBranchDto, hotelId: string) {
+  async createBranch(createBranchDto: CreateBranchDto) {
 
     const branch = new this.branchModel({
       ...createBranchDto,
-      hotelId: new Types.ObjectId(hotelId),
+      hotelId: new Types.ObjectId(createBranchDto.hotelId)
     });
 
     return branch.save();

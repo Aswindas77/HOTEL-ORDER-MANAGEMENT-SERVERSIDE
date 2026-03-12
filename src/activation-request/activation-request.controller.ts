@@ -1,4 +1,4 @@
-import { Controller, Post, Body, Get, Patch, Param, Req } from '@nestjs/common';
+import { Controller, Post, Body, Get, Patch, Param } from '@nestjs/common';
 import { ActivationRequestService } from './activation-request.service';
 import { CreateActivationRequestDto } from './dto/create-activation-request.dto';
 
@@ -9,32 +9,33 @@ export class ActivationRequestController {
     private readonly activationService: ActivationRequestService
   ) {}
 
+  // CREATE ACTIVATION REQUEST
   @Post()
-  createRequest(
-    @Body() body: CreateActivationRequestDto,
-    @Req() req
-  ) {
-
-    const hotelId = req.user?.hotelId || "TEMP_HOTEL_ID";
+  createRequest(@Body() body: CreateActivationRequestDto) {
 
     return this.activationService.createRequest(
-      hotelId,
+      body.hotelId,
       body.subscriptionId
     );
+
   }
 
+  // GET ALL REQUESTS
   @Get()
   getRequests() {
     return this.activationService.getRequests();
   }
 
+  // APPROVE REQUEST
   @Patch(':id/approve')
   approve(@Param('id') id: string) {
     return this.activationService.approveRequest(id);
   }
 
+  // REJECT REQUEST
   @Patch(':id/reject')
   reject(@Param('id') id: string) {
     return this.activationService.rejectRequest(id);
   }
+
 }

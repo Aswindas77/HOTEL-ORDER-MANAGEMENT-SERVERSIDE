@@ -7,4 +7,7 @@ export class CreateSubscriptionDto {
 
   @IsNumber()
   branchCount: number;
+
+  @IsString()
+  hotelId: string;
 }

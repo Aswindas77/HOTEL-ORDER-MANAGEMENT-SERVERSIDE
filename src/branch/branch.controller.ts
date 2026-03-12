@@ -5,18 +5,12 @@ import { CreateBranchDto } from './dto/create-branch.dto';
 @Controller('branch')
 export class BranchController {
 
-  constructor(private readonly branchService: BranchService) {}
+  constructor(private readonly branchService: BranchService) { }
 
   // CREATE BRANCH
   @Post()
-  createBranch(
-    @Body() body: CreateBranchDto,
-    @Req() req
-  ) {
-
-    const hotelId = body.hotelId;
-
-    return this.branchService.createBranch(body, hotelId);
+  createBranch(@Body() body: CreateBranchDto) {
+    return this.branchService.createBranch(body);
   }
 
   // GET ALL BRANCHES

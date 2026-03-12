@@ -5,4 +5,7 @@ export class CreateActivationRequestDto {
   @IsString()
   subscriptionId: string;
 
+  @IsString()
+  hotelId: string;
+
 }
