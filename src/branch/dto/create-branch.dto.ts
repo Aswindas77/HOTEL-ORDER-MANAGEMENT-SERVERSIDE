@@ -13,4 +13,7 @@ export class CreateBranchDto {
 
   @IsString()
   phone: string;
+
+  @IsString()
+  hotelId: string;
 }
