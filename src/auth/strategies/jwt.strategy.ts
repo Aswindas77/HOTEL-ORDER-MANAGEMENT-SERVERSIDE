@@ -20,16 +20,16 @@ export class JwtStrategy extends PassportStrategy(Strategy) {
 
   async validate(payload: any) {
 
-    const user = await this.usersService.findByEmailWithPassword(payload.userId);
+  const user = await this.usersService.findById(payload.userId);
 
-    if (!user || !user.isActive) {
-      throw new UnauthorizedException('User not valid');
-    }
-
-    return {
-      userId: user._id,
-      role: user.role,
-      name: user.name,
-    };
+  if (!user || !user.isActive) {
+    throw new UnauthorizedException('User not valid');
   }
+
+  return {
+    userId: user._id,
+    role: user.role,
+    name: user.name,
+  };
+}
 }

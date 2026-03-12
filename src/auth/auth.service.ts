@@ -17,30 +17,40 @@ export class AuthService {
 
   async register(registerDto: RegisterDto) {
 
-    const { name, email, password } = registerDto;
-    const existingUser = await this.usersService.findByEmailWithPassword(email);
+  const { name, email, password } = registerDto;
 
-    if (existingUser) {
-      throw new BadRequestException('Email already exists');
-    }
+  const existingUser = await this.usersService.findByEmailWithPassword(email);
 
-    const user = await this.usersService.create({
-      name,
-      email,
-      password,
-      role: Role.MANAGER,
-    });
-
-    return {
-      message: 'Registration successful',
-      user: {
-        id: user._id,
-        name: user.name,
-        email: user.email,
-        role: user.role,
-      }
-    };
+  if (existingUser) {
+    throw new BadRequestException('Email already exists');
   }
+
+  const user = await this.usersService.create({
+    name,
+    email,
+    password,
+    role: Role.MANAGER,
+  });
+
+  // create token
+  const payload = {
+    userId: user._id,
+    role: user.role,
+  };
+
+  const accessToken = this.jwtService.sign(payload);
+
+  return {
+    message: 'Registration successful',
+    accessToken,
+    user: {
+      id: user._id,
+      name: user.name,
+      email: user.email,
+      role: user.role,
+    }
+  };
+}
 
   async login(loginDto: LoginDto) {
 
