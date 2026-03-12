@@ -8,4 +8,7 @@ export class CreateActivationRequestDto {
   @IsString()
   hotelId: string;
 
+    @IsString()
+  branchId: string;
+
 }

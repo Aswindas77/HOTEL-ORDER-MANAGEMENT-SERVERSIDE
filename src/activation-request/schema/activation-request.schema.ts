@@ -12,6 +12,9 @@ export class ActivationRequest {
   @Prop({ type: Types.ObjectId, ref: 'Subscription', required: true })
   subscriptionId: Types.ObjectId;
 
+  @Prop({ type: Types.ObjectId, ref: 'Branch', required: true })
+  branchId: Types.ObjectId;
+
   @Prop({
     default: 'pending',
     enum: ['pending', 'approved', 'rejected']

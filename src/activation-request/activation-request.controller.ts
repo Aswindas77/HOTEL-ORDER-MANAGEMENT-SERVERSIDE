@@ -13,9 +13,11 @@ export class ActivationRequestController {
   @Post()
   createRequest(@Body() body: CreateActivationRequestDto) {
 
+    
     return this.activationService.createRequest(
       body.hotelId,
-      body.subscriptionId
+      body.subscriptionId,
+      body.branchId
     );
 
   }

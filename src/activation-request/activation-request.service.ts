@@ -11,11 +11,12 @@ export class ActivationRequestService {
     private activationModel: Model<ActivationRequestDocument>,
   ) {}
 
-  async createRequest(hotelId: string, subscriptionId: string) {
+  async createRequest(hotelId: string, subscriptionId: string, branchId: string) {
 
     const request = new this.activationModel({
       hotelId: new Types.ObjectId(hotelId),
       subscriptionId: new Types.ObjectId(subscriptionId),
+      branchId: new Types.ObjectId(branchId),
       status: 'pending'
     });
 
@@ -26,7 +27,8 @@ export class ActivationRequestService {
     return this.activationModel
       .find()
       .populate('hotelId')
-      .populate('subscriptionId');
+      .populate('subscriptionId')
+      .populate('branchId');
   }
 
   async approveRequest(id: string) {
