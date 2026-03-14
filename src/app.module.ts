@@ -12,6 +12,7 @@ import { DashboardModule } from './dashboard/dashboard.module';
 import { BranchModule } from './branch/branch.module';
 import { SubscriptionModule } from './subscription/subscription.module';
 import { ActivationRequestModule } from './activation-request/activation-request.module';
+import { AnalyticsModule } from './analytics/analytics.module';
 
 @Module({
   imports: [
@@ -35,6 +36,7 @@ import { ActivationRequestModule } from './activation-request/activation-request
     BranchModule,
     SubscriptionModule,
     ActivationRequestModule,
+    AnalyticsModule,
   ],
   controllers: [],
   providers: [],

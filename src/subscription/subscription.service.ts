@@ -45,4 +45,23 @@ export class SubscriptionService {
   async getHotelSubscription(hotelId: string) {
     return this.subscriptionModel.find({ hotelId });
   }
+
+async getExpiringSubscriptions() {
+
+  const today = new Date();
+
+  const next7days = new Date();
+  next7days.setDate(today.getDate() + 7);
+
+  return this.subscriptionModel
+    .find({
+      expiryDate: {
+        $gte: today,
+        $lte: next7days
+      }
+    })
+    .populate('hotelId')
+    .populate('branchId');
+}
+
 }
