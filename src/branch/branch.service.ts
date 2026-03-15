@@ -3,6 +3,8 @@ import { InjectModel } from '@nestjs/mongoose';
 import { Model, Types } from 'mongoose';
 import { Branch, BranchDocument } from './schema/branch.schema';
 import { CreateBranchDto } from './dto/create-branch.dto';
+import { Hotel, HotelDocument } from 'src/hotel/schema/hotel.scehma';
+import { User, UserDocument } from 'src/users/schema/user.schema';
 
 @Injectable()
 export class BranchService {
@@ -10,6 +12,10 @@ export class BranchService {
   constructor(
     @InjectModel(Branch.name)
     private branchModel: Model<BranchDocument>,
+    @InjectModel(Hotel.name)
+    private hotelModel: Model<HotelDocument>,
+    @InjectModel(User.name)
+    private userModel: Model<UserDocument>,
   ) { }
 
   async createBranch(createBranchDto: CreateBranchDto) {

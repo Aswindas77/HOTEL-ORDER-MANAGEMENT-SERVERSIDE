@@ -5,7 +5,10 @@ import { CreateBranchDto } from './dto/create-branch.dto';
 @Controller('branch')
 export class BranchController {
 
-  constructor(private readonly branchService: BranchService) { }
+  constructor(
+    private readonly branchService: BranchService,
+    
+  ) { }
 
   // CREATE BRANCH
   @Post()

@@ -4,6 +4,7 @@ import { Model, Types } from 'mongoose';
 
 import { CreateHotelDto } from './dto/create-hotel.dto';
 import { Hotel, HotelDocument } from './schema/hotel.scehma';
+import { User, UserDocument } from 'src/users/schema/user.schema';
 
 @Injectable()
 export class HotelService {
@@ -11,7 +12,9 @@ export class HotelService {
   constructor(
     @InjectModel(Hotel.name)
     private hotelModel: Model<HotelDocument>,
-  ) {}
+    @InjectModel(User.name)
+    private userModel: Model<UserDocument>
+  ) { }
 
   async createHotel(createHotelDto: CreateHotelDto, ownerId: string) {
 
@@ -20,7 +23,14 @@ export class HotelService {
       ownerId: new Types.ObjectId(ownerId),
     });
 
-    return hotel.save();
+    const savedHotel = await hotel.save();
+    
+    await this.userModel.findByIdAndUpdate(ownerId, {
+      hotelId: savedHotel._id,
+      setupStep: 2
+    });
+
+    return savedHotel
   }
 
   async findAllHotels() {
