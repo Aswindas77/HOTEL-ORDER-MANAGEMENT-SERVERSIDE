@@ -23,4 +23,9 @@ export class SubscriptionController {
 
     return this.subscriptionService.getHotelSubscription(hotelId);
   }
+
+  @Get('expiring')
+  getExpiringSubscriptions() {
+    return this.subscriptionService.getExpiringSubscriptions();
+  }
 }
