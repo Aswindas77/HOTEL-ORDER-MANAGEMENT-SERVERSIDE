@@ -10,4 +10,7 @@ export class CreateSubscriptionDto {
 
   @IsString()
   hotelId: string;
+
+  @IsString()
+  branchId: string;
 }

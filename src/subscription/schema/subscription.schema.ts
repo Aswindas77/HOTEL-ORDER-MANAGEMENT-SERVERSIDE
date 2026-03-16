@@ -33,7 +33,7 @@ export class Subscription {
   @Prop({ default: 'inactive' })
   status: string;
 
-  @Prop({ type: Types.ObjectId, ref: 'Branch' })
+  @Prop({ type: Types.ObjectId, ref: 'Branch'  })
   branchId: Types.ObjectId;
 }
 
