@@ -141,4 +141,12 @@ export class UsersService {
     async findById(id: string) {
         return this.userModel.findById(id);
     }
+
+    async updateSetupStep(userId: string, step: number) {
+  return this.userModel.findByIdAndUpdate(
+    userId,
+    { setupStep: step },
+    { new: true }
+  );
+}
 }
