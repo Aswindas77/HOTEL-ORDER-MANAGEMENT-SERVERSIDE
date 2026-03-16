@@ -13,11 +13,11 @@ export class SubscriptionService {
     private subscriptionModel: Model<SubscriptionDocument>,
     @InjectModel(User.name)
     private userModel: Model<UserDocument>,
-  ) { }
+  ) {  }
 
   async createSubscription(createDto: CreateSubscriptionDto, hotelId: string) {
 
-    const { planType, branchCount } = createDto;
+    const { planType, branchCount, branchId } = createDto;
 
     let pricePerBranch = 0;
 
@@ -34,6 +34,7 @@ export class SubscriptionService {
 
     const subscription = new this.subscriptionModel({
       hotelId: new Types.ObjectId(hotelId),
+      branchId: new Types.ObjectId(branchId),
       planType,
       branchCount,
       pricePerBranch,
@@ -67,15 +68,18 @@ export class SubscriptionService {
     const next7days = new Date();
     next7days.setDate(today.getDate() + 7);
 
-    return this.subscriptionModel
-      .find({
-        expiryDate: {
-          $gte: today,
-          $lte: next7days
-        }
-      })
-      .populate('hotelId')
-      .populate('branchId');
-  }
+      return this.subscriptionModel
+        .find({
+          expiryDate: {
+            $gte: today,
+            $lte: next7days
+          }
+        })
+        .populate('hotelId')
+        .populate({
+        path: 'branchId',
+        model: 'Branch'
+      });
+    }
 
 }
