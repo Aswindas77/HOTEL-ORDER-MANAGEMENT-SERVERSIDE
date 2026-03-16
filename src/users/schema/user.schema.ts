@@ -37,6 +37,12 @@ export class User {
 
   @Prop({ type: Types.ObjectId, ref: 'Hotel', default: null })
   hotelId: Types.ObjectId;
+
+  @Prop({ type: Types.ObjectId, ref: 'Branch', default: null })
+  branchId: Types.ObjectId;
+
+  @Prop({ type: Types.ObjectId, ref: 'Subscription', default: null })
+  subscriptionId: Types.ObjectId;
 }
 
 export const UserSchema = SchemaFactory.createForClass(User);

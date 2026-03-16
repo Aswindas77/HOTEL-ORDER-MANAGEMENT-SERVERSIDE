@@ -20,4 +20,11 @@ export class UpdateUserDto {
 
   @IsOptional()
   isActive?: boolean;
+
+  // 🔽 ADD THESE
+  @IsOptional()
+  hotelId?: string;
+
+  @IsOptional()
+  setupStep?: number;
 }

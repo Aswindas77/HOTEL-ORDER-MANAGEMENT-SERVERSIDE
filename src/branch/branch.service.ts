@@ -25,7 +25,17 @@ export class BranchService {
       hotelId: new Types.ObjectId(createBranchDto.hotelId)
     });
 
-    return branch.save();
+    const savedBranch = await branch.save();
+
+    await this.userModel.findOneAndUpdate(
+      { hotelId: createBranchDto.hotelId },
+      {
+        branchId: savedBranch._id,
+        setupStep: 3
+      }
+    );
+
+    return savedBranch;
   }
 
   async findAllBranches() {

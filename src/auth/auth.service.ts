@@ -17,40 +17,52 @@ export class AuthService {
 
   async register(registerDto: RegisterDto) {
 
-  const { name, email, password } = registerDto;
+    const { name, email, password } = registerDto;
 
-  const existingUser = await this.usersService.findByEmailWithPassword(email);
+    const existingUser = await this.usersService.findByEmailWithPassword(email);
 
-  if (existingUser) {
-    throw new BadRequestException('Email already exists');
-  }
-
-  const user = await this.usersService.create({
-    name,
-    email,
-    password,
-    role: Role.MANAGER,
-  });
-
-  // create token
-  const payload = {
-    userId: user._id,
-    role: user.role,
-  };
-
-  const accessToken = this.jwtService.sign(payload);
-
-  return {
-    message: 'Registration successful',
-    accessToken,
-    user: {
-      id: user._id,
-      name: user.name,
-      email: user.email,
-      role: user.role,
+    if (existingUser) {
+      throw new BadRequestException('Email already exists');
     }
-  };
-}
+
+    const user = await this.usersService.create({
+      name,
+      email,
+      password,
+      role: Role.MANAGER,
+    });
+
+    // create token
+    const payload = {
+      userId: user._id,
+      role: user.role,
+      setupStep: user.setupStep || 1,
+      hotelId: user.hotelId || null,
+      branchId: user.branchId || null,
+      subscriptionId: user.subscriptionId || null
+    };
+
+    const accessToken = this.jwtService.sign(payload);
+
+    return {
+      message: 'Login successful',
+      accessToken,
+      user: {
+        id: user._id,
+        name: user.name,
+        email: user.email,
+        role: user.role,
+      },
+
+      onboarding: {
+        setupStep: user.setupStep || 1,
+        hotelCreated: !!user.hotelId,
+        branchCount: 0,
+        subscriptionCreated: false,
+        activationStatus: null
+      }
+    };
+  }
 
   async login(loginDto: LoginDto) {
 
@@ -74,6 +86,11 @@ export class AuthService {
     const payload = {
       userId: user._id,
       role: user.role,
+      setupStep: user.setupStep || 1,
+      hotelId: user.hotelId || null,
+      branchId: user.branchId || null,
+      subscriptionId: user.subscriptionId || null
+
     };
 
     const accessToken = this.jwtService.sign(payload);
@@ -87,6 +104,28 @@ export class AuthService {
         email: user.email,
         role: user.role,
       },
+
+      onboarding: {
+        setupStep: user.setupStep || 1,
+        hotelCreated: !!user.hotelId,
+        branchCount: 0,
+        subscriptionCreated: false,
+        activationStatus: null
+      }
     };
+  }
+
+  async getProfile(userId: string) {
+    return this.usersService.findOne(userId);
+  }
+
+  async updateSetupStep(userId: string, step: number, hotelId?: string) {
+
+    if (hotelId) {
+      await this.usersService.update(userId, { hotelId });
+    }
+
+    return this.usersService.updateSetupStep(userId, step);
+
   }
 }
