@@ -1,5 +1,5 @@
 import { Prop, Schema, SchemaFactory } from '@nestjs/mongoose';
-import { Document } from 'mongoose';
+import { Document, Types } from 'mongoose';
 import { TableStatus } from 'src/infrastructure/enums/tableStatus.enums';
 
 export type TableDocument = Table & Document;
@@ -24,6 +24,13 @@ export class Table {
 
   @Prop()
   qrCode: string;
+
+  @Prop({ type: Types.ObjectId, ref: 'Hotel', required: true })
+  hotelId: Types.ObjectId;
+
+
+  @Prop({ type: Types.ObjectId, ref: 'Branch', required: true })
+  branchId: Types.ObjectId;
 }
 
 export const TableSchema = SchemaFactory.createForClass(Table);

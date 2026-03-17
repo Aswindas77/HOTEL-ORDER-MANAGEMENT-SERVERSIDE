@@ -1,4 +1,4 @@
-import { IsEnum, IsNotEmpty, IsNumber, Min } from 'class-validator';
+import { IsEnum, IsMongoId, IsNotEmpty, IsNumber, Min } from 'class-validator';
 import { TableStatus } from 'src/infrastructure/enums/tableStatus.enums';
 
 
@@ -13,4 +13,7 @@ export class CreateTableDto {
 
   @IsEnum(TableStatus)
   status: TableStatus;
+
+  @IsMongoId()
+  branchId: string;
 }

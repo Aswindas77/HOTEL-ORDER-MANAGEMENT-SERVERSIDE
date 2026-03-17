@@ -1,4 +1,4 @@
-import { Controller, Get, Post, Body, Patch, Param, Delete, UseGuards,Query } from '@nestjs/common';
+import { Controller, Get, Post, Body, Patch, Param, Delete, UseGuards, Query, Req } from '@nestjs/common';
 import { TablesService } from './tables.service';
 import { CreateTableDto } from './dto/create-table.dto';
 import { UpdateTableDto } from './dto/update-table.dto';
@@ -9,24 +9,26 @@ export class TablesController {
     constructor(private readonly tablesService: TablesService) { }
 
     @Post()
-    create(@Body() createTableDto: CreateTableDto) {
-        return this.tablesService.create(createTableDto);
+    @UseGuards(JwtAuthGuard)
+    create(@Body() dto: CreateTableDto, @Req() req) {
+        console.log('USER =>', req.user); 
+        return this.tablesService.create(dto, req.user);
     }
 
-@Get()
-findAll(
-  @Query('page') page?: number,
-  @Query('limit') limit?: number,
-  @Query('search') search?: string,
-  @Query('status') status?: TableStatus,
-){
-  return this.tablesService.findAll(
-    Number(page) || 1,
-    Number(limit) || 12,
-    search,
-    status,
-  );
-}
+    @Get()
+    findAll(
+        @Query('page') page?: number,
+        @Query('limit') limit?: number,
+        @Query('search') search?: string,
+        @Query('status') status?: TableStatus,
+    ) {
+        return this.tablesService.findAll(
+            Number(page) || 1,
+            Number(limit) || 12,
+            search,
+            status,
+        );
+    }
 
     @Get(':id')
     findOne(@Param('id') id: string) {

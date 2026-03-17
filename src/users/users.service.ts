@@ -50,7 +50,7 @@ export class UsersService {
 
         const query: any = {};
 
-        // Search by name or email
+      
         if (search) {
             query.$or = [
                 { name: { $regex: search, $options: 'i' } },
@@ -58,12 +58,12 @@ export class UsersService {
             ];
         }
 
-        // Role filter
+    
         if (role) {
             query.role = role;
         }
 
-        // Status filter
+      
         if (status !== undefined) {
             query.isActive = status;
         }

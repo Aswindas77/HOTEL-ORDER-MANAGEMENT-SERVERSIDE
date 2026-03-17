@@ -1,73 +1,109 @@
 import { Injectable, NotFoundException, BadRequestException, } from '@nestjs/common';
 import { InjectModel } from '@nestjs/mongoose';
-import { Model } from 'mongoose';
+import { Model, Types } from 'mongoose';
 import { Table, TableDocument } from './schema/table.schema';
 import { CreateTableDto } from './dto/create-table.dto';
 import { UpdateTableDto } from './dto/update-table.dto';
 import { TableStatus } from 'src/infrastructure/enums/tableStatus.enums';
 import { randomBytes } from 'crypto';
+import { User, UserDocument } from 'src/users/schema/user.schema';
+import { Branch, BranchDocument } from 'src/branch/schema/branch.schema';
 
 @Injectable()
 export class TablesService {
     constructor(
         @InjectModel(Table.name)
         private tableModel: Model<TableDocument>,
+        @InjectModel(User.name)
+        private userModel: Model<UserDocument>,
+        @InjectModel(Branch.name)
+        private branchModel: Model<BranchDocument>,
     ) { }
 
-    async create(createTableDto: CreateTableDto) {
+    async create(dto: CreateTableDto, user: any) {
+
+        const userId = user.userId.toString();
+
+        const dbUser = await this.userModel.findById(userId);
+
+        if (!dbUser) {
+            throw new NotFoundException('User not found');
+        }
+
+        const hotelId = dbUser.hotelId;
+        const branchId = dto.branchId;
+
+        const branch = await this.branchModel.findOne({
+            _id: new Types.ObjectId(branchId),
+            hotelId: new Types.ObjectId(hotelId),
+        });
+        console.log('USER HOTEL ID =>', hotelId);
+        console.log('DTO BRANCH ID =>', branchId);
+
+        if (!branch) {
+            throw new BadRequestException('Invalid branch for this hotel');
+        }
+
         const existing = await this.tableModel.findOne({
-            tableNumber: createTableDto.tableNumber,
+            tableNumber: dto.tableNumber,
+            hotelId,
+            branchId,
         });
 
         if (existing) {
-            throw new BadRequestException('Table number already exists');
+            throw new BadRequestException('Table already exists in this branch');
         }
 
         const accessToken = randomBytes(16).toString('hex');
 
+
+
         const table = new this.tableModel({
-            ...createTableDto,
-            accessToken
+            ...dto,
+            accessToken,
+            hotelId,
+            branchId,
         });
+
         return table.save();
     }
 
-async findAll(
-  page = 1,
-  limit = 12,
-  search?: string,
-  status?: TableStatus,
-) {
+    async findAll(
+        page = 1,
+        limit = 12,
+        search?: string,
+        status?: TableStatus,
+    ) {
 
-  const query: any = { isActive: true };
+        const query: any = { isActive: true };
 
-  if (search) {
-    query.tableNumber = { $regex: search, $options: 'i' };
-  }
+        if (search) {
+            query.tableNumber = { $regex: search, $options: 'i' };
+        }
 
-  if (status) {
-    query.status = status;
-  }
+        if (status) {
+            query.status = status;
+        }
 
-  const skip = (page - 1) * limit;
+        const skip = (page - 1) * limit;
 
-  const [tables, total] = await Promise.all([
-    this.tableModel
-      .find(query)
-      .skip(skip)
-      .limit(limit)
-      .sort({ createdAt: -1 }),
+        const [tables, total] = await Promise.all([
+            this.tableModel
+                .find(query)
+                .skip(skip)
+                .limit(limit)
+                .sort({ createdAt: -1 }),
 
-    this.tableModel.countDocuments(query),
-  ]);
+            this.tableModel.countDocuments(query),
+        ]);
 
-  return {
-    data: tables,
-    total,
-    page,
-    totalPages: Math.ceil(total / limit),
-  };
-}
+        return {
+            data: tables,
+            total,
+            page,
+            totalPages: Math.ceil(total / limit),
+        };
+    }
 
     async findOne(id: string) {
         const table = await this.tableModel.findById(id);
