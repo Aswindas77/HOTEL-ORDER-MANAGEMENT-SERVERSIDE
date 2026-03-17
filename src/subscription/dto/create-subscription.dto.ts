@@ -1,4 +1,4 @@
-import { IsString, IsNumber } from 'class-validator';
+import { IsString, IsNumber, IsOptional } from 'class-validator';
 
 export class CreateSubscriptionDto {
 
@@ -11,6 +11,7 @@ export class CreateSubscriptionDto {
   @IsString()
   hotelId: string;
 
+  @IsOptional()
   @IsString()
-  branchId: string;
+  branchId?: string;
 }
