@@ -29,7 +29,8 @@ getRecentOrders() {
   return this.dashboardService.getRecentOrders();
 }
 
-
-
-
+@Get('top-items')
+getTopItems() {
+  return this.dashboardService.getTopMenuItems();
+}
 }
