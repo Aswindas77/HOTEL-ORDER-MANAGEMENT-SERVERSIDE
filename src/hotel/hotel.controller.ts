@@ -1,4 +1,4 @@
-import { Controller, Post, Body, Get, Param, Req, UseGuards } from '@nestjs/common';
+import { Controller, Post, Body, Get, Param, Req, UseGuards, Query } from '@nestjs/common';
 import { HotelService } from './hotel.service';
 import { CreateHotelDto } from './dto/create-hotel.dto';
 import { AuthGuard } from '@nestjs/passport';
@@ -21,8 +21,13 @@ export class HotelController {
   }
 
   @Get()
-  getHotels() {
-    return this.hotelService.findAllHotels();
+  getHotels(
+    @Query('page') page?: number,
+    @Query('limit') limit?: number,
+    @Query('search') search?: string,
+    @Query('status') status?: string
+  ) {
+    return this.hotelService.findAllHotels(page, limit, search, status);
   }
 
   @Get(':id')

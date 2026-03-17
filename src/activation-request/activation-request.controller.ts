@@ -1,4 +1,4 @@
-import { Controller, Post, Body, Get, Patch, Param } from '@nestjs/common';
+import { Controller, Post, Body, Get, Patch, Param, Query } from '@nestjs/common';
 import { ActivationRequestService } from './activation-request.service';
 import { CreateActivationRequestDto } from './dto/create-activation-request.dto';
 
@@ -24,8 +24,13 @@ export class ActivationRequestController {
 
   // GET ALL REQUESTS
   @Get()
-  getRequests() {
-    return this.activationService.getRequests();
+  getRequests(
+    @Query('page') page?: number,
+    @Query('limit') limit?: number,
+    @Query('search') search?: string,
+    @Query('status') status?: string
+  ) {
+    return this.activationService.getRequests(page, limit, search, status);
   }
 
   // APPROVE REQUEST
