@@ -33,4 +33,9 @@ getRecentOrders() {
 getTopItems() {
   return this.dashboardService.getTopMenuItems();
 }
+
+@Get('menu-breakdown')
+getMenuBreakdown() {
+  return this.dashboardService.getMenuBreakdown();
+}
 }

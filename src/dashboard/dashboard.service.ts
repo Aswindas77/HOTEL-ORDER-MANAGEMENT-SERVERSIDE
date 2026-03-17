@@ -250,4 +250,59 @@ async getTopMenuItems() {
 
 }
 
+async getMenuBreakdown() {
+
+  const data = await this.menuModel.aggregate([
+
+    // 1. Normalize category
+    {
+      $project: {
+        category: { $toLower: "$category" }
+      }
+    },
+
+    // 2. Group by category
+    {
+      $group: {
+        _id: "$category",
+        count: { $sum: 1 }
+      }
+    },
+
+    // 3. Fix names (important)
+    {
+      $project: {
+        name: {
+          $switch: {
+            branches: [
+              { case: { $eq: ["$_id", "desert"] }, then: "Dessert" },
+              { case: { $eq: ["$_id", "main_course"] }, then: "Main Course" }
+            ],
+            default: {
+              $concat: [
+                { $toUpper: { $substrCP: ["$_id", 0, 1] } },
+                { $substrCP: ["$_id", 1, { $strLenCP: "$_id" }] }
+              ]
+            }
+          }
+        },
+        count: 1,
+        _id: 0
+      }
+    },
+
+    { $sort: { count: -1 } }
+
+  ]);
+
+  // 4. Calculate percentage
+  const total = data.reduce((sum, item) => sum + item.count, 0);
+
+  return data.map(item => ({
+    ...item,
+    pct: total ? Math.round((item.count / total) * 100) : 0
+  }));
+
+}
+
 }
