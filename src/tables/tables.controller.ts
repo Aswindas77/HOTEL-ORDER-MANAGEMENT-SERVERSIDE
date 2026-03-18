@@ -1,65 +1,110 @@
-import { Controller, Get, Post, Body, Patch, Param, Delete, UseGuards, Query, Req } from '@nestjs/common';
+import {
+  Controller,
+  Get,
+  Post,
+  Body,
+  Patch,
+  Param,
+  Delete,
+  UseGuards,
+  Query,
+  Req,
+} from '@nestjs/common';
 import { TablesService } from './tables.service';
 import { CreateTableDto } from './dto/create-table.dto';
 import { UpdateTableDto } from './dto/update-table.dto';
 import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
 import { TableStatus } from 'src/infrastructure/enums/tableStatus.enums';
+
 @Controller('tables')
 export class TablesController {
-    constructor(private readonly tablesService: TablesService) { }
+  constructor(private readonly tablesService: TablesService) {}
 
-    @Post()
-    @UseGuards(JwtAuthGuard)
-    create(@Body() dto: CreateTableDto, @Req() req) {
-        console.log('USER =>', req.user); 
-        return this.tablesService.create(dto, req.user);
-    }
+  @Post()
+  @UseGuards(JwtAuthGuard)
+  create(@Body() dto: CreateTableDto, @Req() req) {
+    return this.tablesService.create(dto, req.user);
+  }
 
-    @Get()
-    findAll(
-        @Query('page') page?: number,
-        @Query('limit') limit?: number,
-        @Query('search') search?: string,
-        @Query('status') status?: TableStatus,
-    ) {
-        return this.tablesService.findAll(
-            Number(page) || 1,
-            Number(limit) || 12,
-            search,
-            status,
-        );
-    }
+  // ✅ FIXED
+  @Get()
+  @UseGuards(JwtAuthGuard)
+  findAll(
+    @Req() req,
+    @Query('branchId') branchId: string,
+    @Query('page') page?: number,
+    @Query('limit') limit?: number,
+    @Query('search') search?: string,
+    @Query('status') status?: TableStatus,
+  ) {
+    return this.tablesService.findAll(
+      req.user,
+      branchId,
+      Number(page) || 1,
+      Number(limit) || 12,
+      search,
+      status,
+    );
+  }
 
-    @Get(':id')
-    findOne(@Param('id') id: string) {
-        return this.tablesService.findOne(id);
-    }
+  // ✅ FIXED
+  @Get(':id')
+  @UseGuards(JwtAuthGuard)
+  findOne(
+    @Param('id') id: string,
+    @Req() req,
+    @Query('branchId') branchId: string,
+  ) {
+    return this.tablesService.findOne(id, req.user, branchId);
+  }
 
-    @Patch(':id')
-    update(
-        @Param('id') id: string,
-        @Body() updateTableDto: UpdateTableDto,
-    ) {
-        return this.tablesService.update(id, updateTableDto);
-    }
+  // ✅ FIXED
+  @Patch(':id')
+  @UseGuards(JwtAuthGuard)
+  update(
+    @Param('id') id: string,
+    @Body() dto: UpdateTableDto,
+    @Req() req,
+    @Query('branchId') branchId: string,
+  ) {
+    return this.tablesService.update(id, dto, req.user, branchId);
+  }
 
-    @Delete(':id')
-    remove(@Param('id') id: string) {
-        return this.tablesService.remove(id);
-    }
+  // ✅ FIXED
+  @Delete(':id')
+  @UseGuards(JwtAuthGuard)
+  remove(
+    @Param('id') id: string,
+    @Req() req,
+    @Query('branchId') branchId: string,
+  ) {
+    return this.tablesService.remove(id, req.user, branchId);
+  }
 
-    @Patch(':id/open')
-    open(@Param('id') id: string) {
-        return this.tablesService.openTable(id);
-    }
+  // ✅ FIXED
+  @Patch(':id/open')
+  @UseGuards(JwtAuthGuard)
+  open(
+    @Param('id') id: string,
+    @Req() req,
+    @Query('branchId') branchId: string,
+  ) {
+    return this.tablesService.openTable(id, req.user, branchId);
+  }
 
-    @Patch(':id/close')
-    close(@Param('id') id: string) {
-        return this.tablesService.closeTable(id);
-    }
+  // ✅ FIXED
+  @Patch(':id/close')
+  @UseGuards(JwtAuthGuard)
+  close(
+    @Param('id') id: string,
+    @Req() req,
+    @Query('branchId') branchId: string,
+  ) {
+    return this.tablesService.closeTable(id, req.user, branchId);
+  }
 
-    @Get('verify/:token')
-    verifyTable(@Param('token') token: string) {
-        return this.tablesService.verifyByToken(token);
-    }
+  @Get('verify/:token')
+  verifyTable(@Param('token') token: string) {
+    return this.tablesService.verifyByToken(token);
+  }
 }

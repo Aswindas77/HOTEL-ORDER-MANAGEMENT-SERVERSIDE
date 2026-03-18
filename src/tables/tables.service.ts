@@ -37,8 +37,7 @@ export class TablesService {
             _id: new Types.ObjectId(branchId),
             hotelId: new Types.ObjectId(hotelId),
         });
-        console.log('USER HOTEL ID =>', hotelId);
-        console.log('DTO BRANCH ID =>', branchId);
+
 
         if (!branch) {
             throw new BadRequestException('Invalid branch for this hotel');
@@ -69,13 +68,24 @@ export class TablesService {
     }
 
     async findAll(
+        user: any,
+        branchId: string,
         page = 1,
         limit = 12,
         search?: string,
         status?: TableStatus,
     ) {
+        const dbUser = await this.userModel.findById(user.userId);
+        if (!dbUser) {
+            throw new NotFoundException('User not found');
+        }
+        const hotelId = dbUser.hotelId;
 
-        const query: any = { isActive: true };
+        const query: any = {
+            hotelId: new Types.ObjectId(hotelId),
+            branchId: new Types.ObjectId(branchId),
+            isActive: true,
+        };
 
         if (search) {
             query.tableNumber = { $regex: search, $options: 'i' };
@@ -88,12 +98,7 @@ export class TablesService {
         const skip = (page - 1) * limit;
 
         const [tables, total] = await Promise.all([
-            this.tableModel
-                .find(query)
-                .skip(skip)
-                .limit(limit)
-                .sort({ createdAt: -1 }),
-
+            this.tableModel.find(query).skip(skip).limit(limit),
             this.tableModel.countDocuments(query),
         ]);
 
@@ -105,8 +110,18 @@ export class TablesService {
         };
     }
 
-    async findOne(id: string) {
-        const table = await this.tableModel.findById(id);
+    async findOne(id: string, user: any, branchId: string) {
+        const dbUser = await this.userModel.findById(user.userId);
+        if (!dbUser) {
+            throw new NotFoundException('User not found');
+        }
+        const hotelId = dbUser.hotelId;
+
+        const table = await this.tableModel.findOne({
+            _id: new Types.ObjectId(id),
+            hotelId: new Types.ObjectId(hotelId),
+            branchId: new Types.ObjectId(branchId),
+        });
 
         if (!table) {
             throw new NotFoundException('Table not found');
@@ -115,12 +130,21 @@ export class TablesService {
         return table;
     }
 
-    async update(id: string, updateTableDto: UpdateTableDto) {
+    async update(id: string, dto: UpdateTableDto, user: any, branchId: string) {
+        const dbUser = await this.userModel.findById(user.userId);
+        if (!dbUser) {
+            throw new NotFoundException('User not found');
+        }
+        const hotelId = dbUser.hotelId;
 
-        const updatedTable = await this.tableModel.findByIdAndUpdate(
-            id,
-            { $set: updateTableDto },
-            { returnDocument: 'after' }
+        const updatedTable = await this.tableModel.findOneAndUpdate(
+            {
+                _id: new Types.ObjectId(id),
+                hotelId: new Types.ObjectId(hotelId),
+                branchId: new Types.ObjectId(branchId),
+            },
+            { $set: dto },
+            { new: true }
         );
 
         if (!updatedTable) {
@@ -131,8 +155,18 @@ export class TablesService {
     }
 
 
-    async remove(id: string) {
-        const table = await this.tableModel.findById(id);
+    async remove(id: string, user: any, branchId: string) {
+        const dbUser = await this.userModel.findById(user.userId);
+        if (!dbUser) {
+            throw new NotFoundException('User not found');
+        }
+        const hotelId = dbUser.hotelId;
+
+        const table = await this.tableModel.findOne({
+            _id: new Types.ObjectId(id),
+            hotelId: new Types.ObjectId(hotelId),
+            branchId: new Types.ObjectId(branchId),
+        });
 
         if (!table) {
             throw new NotFoundException('Table not found');
@@ -142,35 +176,25 @@ export class TablesService {
         return table.save();
     }
 
-    async openTable(id: string) {
-        const table = await this.tableModel.findById(id);
-
-        if (!table) {
-            throw new NotFoundException('Table not found');
-        }
+    async openTable(id: string, user: any, branchId: string) {
+        const table = await this.findOne(id, user, branchId);
 
         if (table.status !== TableStatus.AVAILABLE) {
             throw new BadRequestException('Table is not available to open');
         }
 
         table.status = TableStatus.OCCUPIED;
-
         return table.save();
     }
 
-    async closeTable(id: string) {
-        const table = await this.tableModel.findById(id);
-
-        if (!table) {
-            throw new NotFoundException('Table not found');
-        }
+    async closeTable(id: string, user: any, branchId: string) {
+        const table = await this.findOne(id, user, branchId);
 
         if (table.status !== TableStatus.OCCUPIED) {
             throw new BadRequestException('Table is not currently occupied');
         }
 
         table.status = TableStatus.AVAILABLE;
-
         return table.save();
     }
 
