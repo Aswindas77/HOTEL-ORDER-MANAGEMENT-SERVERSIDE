@@ -20,6 +20,8 @@ export class MenuService {
 
         const existing = await this.menuModel.findOne({
             name: dto.name.trim(),
+            hotelId: dto.hotelId,
+            branchId: dto.branchId,
         });
 
         if (existing) {
@@ -33,9 +35,9 @@ export class MenuService {
     }
 
     // GET ALL (with optional filters)
-    async findAll(category?: string, foodType?: string, search?: string) {
+    async findAll(hotelId:string,branchId:string,category?: string, foodType?: string, search?: string,) {
 
-        const filter: any = { isAvailable: true };
+        const filter: any = { hotelId,branchId,isAvailable: true };
 
         if (category) filter.category = category;
         if (foodType) filter.foodType = foodType;
@@ -47,9 +49,12 @@ export class MenuService {
     }
 
     // GET ONE
-    async findOne(id: string) {
-        const menu = await this.menuModel.findById(id);
-
+    async findOne(id: string,hotelId,branchId) {
+    const menu = await this.menuModel.findOne({
+        _id: id,
+        hotelId,
+        branchId,
+    });
         if (!menu) {
             throw new NotFoundException('Menu item not found');
         }
@@ -58,9 +63,13 @@ export class MenuService {
     }
 
     // UPDATE
-    async update(id: string, dto: UpdateMenuDto) {
+    async update(id: string, dto: UpdateMenuDto,hotelId: string, branchId: string) {
 
-        const menu = await this.menuModel.findById(id);
+        const menu = await this.menuModel.findOne({
+            _id: id,
+            hotelId,
+            branchId,
+        });
         if (!menu) {
             throw new NotFoundException('Menu item not found');
         }
@@ -70,9 +79,14 @@ export class MenuService {
     }
 
     // SOFT DELETE
-    async disable(id: string) {
+    async disable(id: string,hotelId: string, branchId: string) {
 
-        const menu = await this.menuModel.findById(id);
+    const menu = await this.menuModel.findOne({
+        _id: id,
+        hotelId,
+        branchId,
+    });
+
         if (!menu) {
             throw new NotFoundException('Menu item not found');
         }
@@ -82,9 +96,14 @@ export class MenuService {
     }
 
     // ENABLE
-    async enable(id: string) {
+    async enable(id: string,hotelId: string, branchId: string) {
 
-        const menu = await this.menuModel.findById(id);
+    const menu = await this.menuModel.findOne({
+        _id: id,
+        hotelId,
+        branchId,
+    });       
+       
         if (!menu) {
             throw new NotFoundException('Menu item not found');
         }
@@ -97,8 +116,10 @@ export class MenuService {
   category?: string,
   foodType?: string,
   search?: string,
+  hotelId?:string,
+  branchId?:string,
 ) {
-  const filter: any = {};
+  const filter: any = {hotelId,branchId};
 
   if (category) filter.category = category;
   if (foodType) filter.foodType = foodType;
