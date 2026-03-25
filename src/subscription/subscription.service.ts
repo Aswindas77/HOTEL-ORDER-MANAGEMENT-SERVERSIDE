@@ -71,7 +71,6 @@ export class SubscriptionService {
       return this.subscriptionModel
         .find({
           expiryDate: {
-            $gte: today,
             $lte: next7days
           }
         })
