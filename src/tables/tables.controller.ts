@@ -15,10 +15,14 @@ import { CreateTableDto } from './dto/create-table.dto';
 import { UpdateTableDto } from './dto/update-table.dto';
 import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
 import { TableStatus } from 'src/infrastructure/enums/tableStatus.enums';
+import { MenuService } from 'src/menu/menu.service';
 
 @Controller('tables')
 export class TablesController {
-  constructor(private readonly tablesService: TablesService) {}
+  constructor(
+    private readonly tablesService: TablesService,
+    private readonly menuService:MenuService
+  ) { }
 
   @Post()
   @UseGuards(JwtAuthGuard)
@@ -106,5 +110,20 @@ export class TablesController {
   @Get('verify/:token')
   verifyTable(@Param('token') token: string) {
     return this.tablesService.verifyByToken(token);
+  }
+
+  @Get('by-table/:token')
+  getMenuByTable(
+    @Param('token') token: string,
+    @Query('category') category?: string,
+    @Query('foodType') foodType?: string,
+    @Query('search') search?: string,
+  ) {
+    return this.menuService.getMenuByTable(
+      token,
+      category,
+      foodType,
+      search,
+    );
   }
 }

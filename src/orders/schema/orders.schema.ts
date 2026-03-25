@@ -51,6 +51,12 @@ export class Order {
 
     @Prop({ enum: PaymentStatus, default: PaymentStatus.UNPAID })
     paymentStatus: PaymentStatus;
+
+    @Prop({ type: Types.ObjectId, ref: 'Hotel', required: true })
+    hotelId: Types.ObjectId;
+
+    @Prop({ type: Types.ObjectId, ref: 'Branch', required: true })
+    branchId: Types.ObjectId;
 }
 
 export const OrderSchema = SchemaFactory.createForClass(Order);

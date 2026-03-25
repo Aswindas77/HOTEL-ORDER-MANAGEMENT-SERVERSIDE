@@ -5,6 +5,7 @@ import { OrderController } from './orders.controller';
 import { OrderService } from './orders.service';
 import { Menu, MenuSchema } from 'src/menu/schema/menu.schema';
 import { Table, TableSchema } from 'src/tables/schema/table.schema';
+import { User, UserSchema } from 'src/users/schema/user.schema';
 
 @Module({
   imports: [
@@ -12,6 +13,7 @@ import { Table, TableSchema } from 'src/tables/schema/table.schema';
       { name: Order.name, schema: OrderSchema },
       { name: Menu.name, schema: MenuSchema },
       { name: Table.name, schema: TableSchema },
+      { name: User.name, schema: UserSchema },
     ]),
   ],
   controllers: [OrderController],
