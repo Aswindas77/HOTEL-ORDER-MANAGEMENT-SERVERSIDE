@@ -1,328 +1,333 @@
-import { BadRequestException, Injectable, NotFoundException, } from '@nestjs/common';
+import {
+  BadRequestException,
+  Injectable,
+  NotFoundException,
+} from '@nestjs/common';
 import { InjectModel } from '@nestjs/mongoose';
-import { Model } from 'mongoose';
+import { Model, Types } from 'mongoose';
+
 import { Order, OrderDocument } from './schema/orders.schema';
 import { Menu, MenuDocument } from 'src/menu/schema/menu.schema';
 import { CreateOrderDto } from './dto/create-order.dto';
-import { OrderStatus, OrderType, PaymentStatus } from 'src/infrastructure/enums/order-status.enum';
+import {
+  OrderStatus,
+  PaymentStatus,
+} from 'src/infrastructure/enums/order-status.enum';
 import { Table, TableDocument } from 'src/tables/schema/table.schema';
-
+import { User, UserDocument } from 'src/users/schema/user.schema';
 
 @Injectable()
 export class OrderService {
-    constructor(
-        @InjectModel(Order.name)
-        private orderModel: Model<OrderDocument>,
+  constructor(
+    @InjectModel(Order.name)
+    private orderModel: Model<OrderDocument>,
 
-        @InjectModel(Menu.name)
-        private menuModel: Model<MenuDocument>,
+    @InjectModel(Menu.name)
+    private menuModel: Model<MenuDocument>,
 
-        @InjectModel(Table.name)
-        private tableModel: Model<TableDocument>,
-    ) { }
+    @InjectModel(Table.name)
+    private tableModel: Model<TableDocument>,
 
+    @InjectModel(User.name)
+    private userModel: Model<UserDocument>,
+  ) {}
 
-    async create(dto: CreateOrderDto) {
+  // ───────── CREATE ORDER ─────────
 
-        if (!dto.tableToken) {
-            throw new BadRequestException('Table token required');
-        }
+  async create(dto: CreateOrderDto) {
+    const table = await this.tableModel.findOne({
+      accessToken: dto.tableToken.toLowerCase(),
+      isActive: true,
+    });
 
-        const table = await this.tableModel.findOne({
-            accessToken: dto.tableToken.toLowerCase(),
-            isActive: true
-        });
+    if (!table) throw new BadRequestException('Invalid table');
 
-        if (!table) {
-            throw new BadRequestException('Invalid or inactive table');
-        }
+    const hotelId = table.hotelId;
+    const branchId = table.branchId;
 
-        if (!dto.items || dto.items.length === 0) {
-            throw new BadRequestException('Items required');
-        }
+    const menuIds = dto.items.map(
+      (i) => new Types.ObjectId(i.menuItemId),
+    );
 
-        const menuIds = dto.items.map(item => item.menuItemId);
+    const menuItems = await this.menuModel.find({
+      _id: { $in: menuIds },
+      hotelId,
+      branchId,
+    });
 
-        const menuItems = await this.menuModel.find({
-            _id: { $in: menuIds }
-        });
+    let subtotal = 0;
 
-        if (menuItems.length !== dto.items.length) {
-            throw new BadRequestException('Invalid menu item');
-        }
+    const items = dto.items.map((item) => {
+      const menu = menuItems.find(
+        (m) => m._id.toString() === item.menuItemId,
+      );
 
-        let subtotal = 0;
+      if (!menu) throw new BadRequestException('Invalid menu item');
 
-        const items = dto.items.map(item => {
+      const total = menu.price * item.quantity;
+      subtotal += total;
 
-            if (item.quantity <= 0) {
-                throw new BadRequestException('Invalid quantity');
-            }
+      return {
+        menuItemId: menu._id,
+        name: menu.name,
+        price: menu.price,
+        quantity: item.quantity,
+        total,
+      };
+    });
 
-            const menu = menuItems.find(
-                m => m._id.toString() === item.menuItemId
-            );
+    const tax = subtotal * 0.05;
+    const grandTotal = subtotal + tax;
 
-            if (!menu) {
-                throw new BadRequestException('Menu item not found');
-            }
+    return this.orderModel.create({
+      orderNumber: `ORD-${Date.now()}`,
+      tokenNumber: Math.floor(Math.random() * 1000),
+      tableNumber: table.tableNumber,
+      items,
+      subtotal,
+      tax,
+      grandTotal,
+      status: OrderStatus.PENDING,
+      paymentStatus: PaymentStatus.UNPAID,
+      hotelId,
+      branchId,
+    });
+  }
 
-            if (!menu.isAvailable) {
-                throw new BadRequestException('Menu item not available');
-            }
+  // ───────── COMMON CONTEXT (FIXED 🔥) ─────────
 
-            const total = menu.price * item.quantity;
-            subtotal += total;
+  private async getContext(user: any, branchId: string) {
+    const dbUser = await this.userModel.findById(
+      user.userId.toString(),
+    );
 
-            return {
-                menuItemId: menu._id,
-                name: menu.name,
-                price: menu.price,
-                quantity: item.quantity,
-                total,
-            };
-        });
+    if (!dbUser) throw new NotFoundException('User not found');
 
-        const tax = subtotal * 0.05;
-        const grandTotal = subtotal + tax;
-
-        const lastOrder = await this.orderModel
-            .findOne()
-            .sort({ createdAt: -1 });
-
-        const tokenNumber = lastOrder ? lastOrder.tokenNumber + 1 : 1;
-
-        return this.orderModel.create({
-            orderNumber: `ORD-${Date.now()}`,
-            tableNumber: table.tableNumber,
-            tokenNumber,
-            items,
-            subtotal,
-            tax,
-            grandTotal,
-            status: OrderStatus.PENDING,
-            paymentStatus: PaymentStatus.UNPAID,
-        });
+    // 🔥 FIX: VALIDATION ADDED
+    if (!branchId || !Types.ObjectId.isValid(branchId)) {
+      throw new BadRequestException('Invalid branchId');
     }
 
+    return {
+      hotelId: new Types.ObjectId(dbUser.hotelId),
+      branchId: new Types.ObjectId(branchId),
+    };
+  }
 
+  // ───────── UPDATE STATUS ─────────
 
-    async updateStatus(orderId: string, status: OrderStatus) {
+  async updateStatus(
+    id: string,
+    status: OrderStatus,
+    user: any,
+    branchId: string,
+  ) {
+    const { hotelId, branchId: bId } = await this.getContext(
+      user,
+      branchId,
+    );
 
-        const order = await this.orderModel.findById(orderId);
-        if (!order) throw new NotFoundException('Order not found');
+    const order = await this.orderModel.findOne({
+      _id: new Types.ObjectId(id),
+      hotelId,
+      branchId: bId,
+    });
 
-        const validTransitions = {
-            [OrderStatus.PENDING]: [OrderStatus.PREPARING],
-            [OrderStatus.PREPARING]: [
-                OrderStatus.READY,
-                OrderStatus.PENDING
-            ],
-            [OrderStatus.READY]: [
-                OrderStatus.SERVED,
-                OrderStatus.PREPARING
-            ],
-            [OrderStatus.SERVED]: [
-                OrderStatus.COMPLETED,
-                OrderStatus.READY
-            ],
-        };
+    if (!order) throw new NotFoundException('Order not found');
 
+    order.status = status;
+    return order.save();
+  }
 
-        if (!validTransitions[order.status]?.includes(status)) {
-            throw new BadRequestException('Invalid status transition');
-        }
+  // ───────── PAYMENT ─────────
 
+  async markAsPaid(id: string, user: any, branchId: string) {
+    const { hotelId, branchId: bId } = await this.getContext(
+      user,
+      branchId,
+    );
 
-        if (
-            status === OrderStatus.COMPLETED &&
-            order.paymentStatus !== PaymentStatus.PAID
-        ) {
-            throw new BadRequestException(
-                'Cannot complete unpaid order',
-            );
-        }
+    const order = await this.orderModel.findOne({
+      _id: new Types.ObjectId(id),
+      hotelId,
+      branchId: bId,
+    });
 
-        order.status = status;
+    if (!order) throw new NotFoundException('Order not found');
 
-        return order.save();
+    order.paymentStatus = PaymentStatus.PAID;
+    return order.save();
+  }
+
+  async markAsUnpaid(id: string, user: any, branchId: string) {
+    const { hotelId, branchId: bId } = await this.getContext(
+      user,
+      branchId,
+    );
+
+    const order = await this.orderModel.findOne({
+      _id: new Types.ObjectId(id),
+      hotelId,
+      branchId: bId,
+    });
+
+    if (!order) throw new NotFoundException('Order not found');
+
+    order.paymentStatus = PaymentStatus.UNPAID;
+    return order.save();
+  }
+
+  // ───────── CHEF ORDERS ─────────
+
+  async getChefOrders(
+    user: any,
+    branchId: string,
+    page?: number,
+    limit?: number,
+    search?: string,
+    status?: OrderStatus,
+    startDate?: string,
+    endDate?: string,
+  ) {
+    const currentPage = page && page > 0 ? page : 1;
+    const currentLimit = limit && limit > 0 ? limit : 10;
+    const skip = (currentPage - 1) * currentLimit;
+
+    const { hotelId, branchId: bId } = await this.getContext(
+      user,
+      branchId,
+    );
+
+    const filter: any = {
+      hotelId,
+      branchId: bId,
+    };
+
+    const chefStatuses = [
+      OrderStatus.PENDING,
+      OrderStatus.PREPARING,
+      OrderStatus.READY,
+    ];
+
+    filter.status = status ? status : { $in: chefStatuses };
+
+    if (search) {
+      const numeric = Number(search);
+
+      filter.$or = [
+        { tableNumber: { $regex: search, $options: 'i' } },
+        { orderNumber: { $regex: search, $options: 'i' } },
+        { 'items.name': { $regex: search, $options: 'i' } },
+        ...(Number.isNaN(numeric) ? [] : [{ tokenNumber: numeric }]),
+      ];
     }
 
-
-    async markAsPaid(orderId: string) {
-        const order = await this.orderModel.findById(orderId);
-        if (!order) throw new NotFoundException('Order not found');
-
-        if (order.status !== OrderStatus.SERVED) {
-            throw new BadRequestException(
-                'Order must be served before payment',
-            );
-        }
-
-        if (order.paymentStatus === PaymentStatus.PAID) {
-            throw new BadRequestException('Already paid');
-        }
-
-        order.paymentStatus = PaymentStatus.PAID;
-
-        return order.save();
+    if (startDate || endDate) {
+      filter.createdAt = {};
+      if (startDate) filter.createdAt.$gte = new Date(startDate);
+      if (endDate) filter.createdAt.$lte = new Date(endDate);
     }
 
-    async markAsUnpaid(orderId: string) {
-        const order = await this.orderModel.findById(orderId);
-        if (!order) throw new NotFoundException('Order not found');
+    const [orders, total] = await Promise.all([
+      this.orderModel
+        .find(filter)
+        .sort({ createdAt: 1 })
+        .skip(skip)
+        .limit(currentLimit),
 
-        if (order.paymentStatus === PaymentStatus.UNPAID) {
-            throw new BadRequestException('Already unpaid');
-        }
+      this.orderModel.countDocuments(filter),
+    ]);
 
-        order.paymentStatus = PaymentStatus.UNPAID;
+    return {
+      total,
+      page: currentPage,
+      limit: currentLimit,
+      totalPages: Math.ceil(total / currentLimit),
+      data: orders,
+    };
+  }
 
-        if (order.status === OrderStatus.COMPLETED) {
-            order.status = OrderStatus.SERVED;
-        }
+  // ───────── MANAGER ORDERS ─────────
 
-        return order.save();
+  async getManagerOrders(
+    user: any,
+    branchId: string,
+    page = 1,
+    limit = 10,
+  ) {
+    const { hotelId, branchId: bId } = await this.getContext(
+      user,
+      branchId,
+    );
+
+    const skip = (page - 1) * limit;
+
+    const [orders, total] = await Promise.all([
+      this.orderModel
+        .find({
+          hotelId,
+          branchId: bId,
+          paymentStatus: PaymentStatus.UNPAID,
+        })
+        .skip(skip)
+        .limit(limit),
+
+      this.orderModel.countDocuments({
+        hotelId,
+        branchId: bId,
+        paymentStatus: PaymentStatus.UNPAID,
+      }),
+    ]);
+
+    return {
+      total,
+      page,
+      totalPages: Math.ceil(total / limit),
+      data: orders,
+    };
+  }
+
+  // ───────── ALL ORDERS (FIXED 🔥) ─────────
+
+  async getOrders(
+    user: any,
+    branchId: string,
+    status?: OrderStatus,
+    paymentStatus?: PaymentStatus,
+    search?: string,
+    page = 1,
+    limit = 10,
+  ) {
+    const { hotelId, branchId: bId } = await this.getContext(
+      user,
+      branchId,
+    );
+
+    const filter: any = { hotelId, branchId: bId };
+
+    if (status) filter.status = status;
+    if (paymentStatus) filter.paymentStatus = paymentStatus;
+
+    if (search) {
+      filter.$or = [
+        { tableNumber: { $regex: search, $options: 'i' } },
+        { orderNumber: { $regex: search, $options: 'i' } },
+        { 'items.name': { $regex: search, $options: 'i' } },
+      ];
     }
 
+    const skip = (page - 1) * limit;
 
+    const [orders, total] = await Promise.all([
+      this.orderModel.find(filter).skip(skip).limit(limit),
+      this.orderModel.countDocuments(filter),
+    ]);
 
-    async getChefOrders(
-        page?: number,
-        limit?: number,
-        search?: string,
-        status?: OrderStatus,
-        startDate?: string,
-        endDate?: string,
-    ) {
-
-        const currentPage = page && page > 0 ? page : 1;
-        const currentLimit = limit && limit > 0 ? limit : 10;
-        const skip = (currentPage - 1) * currentLimit;
-
-
-        const filter: any = {};
-
-        const chefStatuses = [
-            OrderStatus.PENDING,
-            OrderStatus.PREPARING,
-            OrderStatus.READY
-        ];
-
-        
-        filter.status = status
-            ? status
-            : { $in: chefStatuses };
-
-        // 🔎 Search by tableNumber or tokenNumber
-        if (search) {
-
-            const numeric = Number(search);
-
-            filter.$or = [
-                { tableNumber: { $regex: search, $options: 'i' } },
-                { orderNumber: { $regex: search, $options: 'i' } },
-                { "items.name": { $regex: search, $options: "i" } },
-                ...(Number.isNaN(numeric) ? [] : [{ tokenNumber: numeric }])
-            ];
-
-        }
-
-        // 📅 Date filter
-        if (startDate || endDate) {
-            filter.createdAt = {};
-            if (startDate) {
-                filter.createdAt.$gte = new Date(startDate);
-            }
-            if (endDate) {
-                filter.createdAt.$lte = new Date(endDate);
-            }
-        }
-
-        const [orders, total] = await Promise.all([
-            this.orderModel
-                .find(filter)
-                .sort({ createdAt: 1 })
-                .skip(skip)
-                .limit(currentLimit),
-
-            this.orderModel.countDocuments(filter),
-        ]);
-
-        return {
-            total,
-            page: currentPage,
-            limit: currentLimit,
-            totalPages: Math.ceil(total / currentLimit),
-            data: orders,
-        };
-    }
-
-
-
-    async getManagerOrders(page: number = 1, limit: number = 10) {
-        const skip = (page - 1) * limit;
-
-        const filter = {
-            status: OrderStatus.SERVED,
-            paymentStatus: PaymentStatus.UNPAID,
-        };
-
-        const [orders, total] = await Promise.all([
-            this.orderModel
-                .find(filter)
-                .sort({ createdAt: -1 })
-                .skip(skip)
-                .limit(limit),
-            this.orderModel.countDocuments(filter),
-        ]);
-
-        return {
-            total,
-            page,
-            totalPages: Math.ceil(total / limit),
-            data: orders,
-        };
-    }
-
-    async getOrders(
-        status?: OrderStatus,
-        paymentStatus?: PaymentStatus,
-        search?: string,
-        page: number = 1,
-        limit: number = 10,
-    ) {
-        const filter: any = {};
-        if (status) {
-            filter.status = status;
-        }
-        if (paymentStatus) {
-            filter.paymentStatus = paymentStatus;
-        }
-
-        if (search) {
-            filter.$or = [
-                { orderNumber: { $regex: search, $options: 'i' } },
-                { tokenNumber: Number(search) || 0 },
-                { "items.name": { $regex: search, $options: "i" } }
-            ];
-        }
-
-        const skip = (page - 1) * limit;
-        const [orders, total] = await Promise.all([
-            this.orderModel
-                .find(filter)
-                .sort({ createdAt: -1 })
-                .skip(skip)
-                .limit(limit),
-            this.orderModel.countDocuments(filter),
-        ]);
-        return {
-            total,
-            page,
-            totalPages: Math.ceil(total / limit),
-            data: orders,
-        };
-    }
-
+    return {
+      total,
+      page,
+      totalPages: Math.ceil(total / limit),
+      data: orders,
+    };
+  }
 }

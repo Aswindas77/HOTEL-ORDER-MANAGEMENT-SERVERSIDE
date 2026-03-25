@@ -1,4 +1,4 @@
-import { IsEnum, IsNumber, IsOptional, IsString, IsBoolean, Min, } from 'class-validator';
+import { IsEnum,IsMongoId, IsNumber, IsOptional, IsString, IsBoolean, Min, } from 'class-validator';
 import { FoodType, MenuCategory } from 'src/infrastructure/enums/menu.enum';
 
 export class CreateMenuDto {
@@ -23,4 +23,10 @@ export class CreateMenuDto {
     @IsOptional()
     @IsBoolean()
     isAvailable?: boolean;
+    
+    @IsMongoId()
+    hotelId: string;
+
+    @IsMongoId()
+    branchId: string;
 }

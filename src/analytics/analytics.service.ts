@@ -30,32 +30,41 @@ export class AnalyticsService {
 
   async getAnalytics() {
 
-    const totalHotels = await this.hotelModel.countDocuments();
-    const totalBranches = await this.branchModel.countDocuments();
-    const totalUsers = await this.userModel.countDocuments();
 
-    const pendingRequests = await this.activationModel.countDocuments({
-      status: 'pending'
-    });
+    const [
+      totalHotels,
+      totalBranches,
+      totalUsers,
 
-    const approvedRequests = await this.activationModel.countDocuments({
-      status: 'approved'
-    });
+      pendingRequests,
+      approvedRequests,
+      rejectedRequests,
 
-    const rejectedRequests = await this.activationModel.countDocuments({
-      status: 'rejected'
-    });
+      premiumPlans,
+      standardPlans,
+      classicPlans
+    ] = await Promise.all([
 
-    const premiumPlans = await this.subscriptionModel.countDocuments({
-      planType: 'premium'
-    });
+      this.hotelModel.countDocuments(),
+      this.branchModel.countDocuments(),
+      this.userModel.countDocuments(),
 
-    const standardPlans = await this.subscriptionModel.countDocuments({
-      planType: 'standard'
-    });
+      this.activationModel.countDocuments({ status: 'pending' }),
+      this.activationModel.countDocuments({ status: 'approved' }),
+      this.activationModel.countDocuments({ status: 'rejected' }),
 
-    const classicPlans = await this.subscriptionModel.countDocuments({
-      planType: 'classic'
+      this.subscriptionModel.countDocuments({ planType: 'premium' }),
+      this.subscriptionModel.countDocuments({ planType: 'standard' }),
+      this.subscriptionModel.countDocuments({ planType: 'classic' }),
+
+    ]);
+
+  
+    const today = new Date();
+    today.setHours(0, 0, 0, 0);
+
+    const todayRequests = await this.activationModel.countDocuments({
+      createdAt: { $gte: today }
     });
 
     return {
@@ -66,7 +75,8 @@ export class AnalyticsService {
       activationRequests: {
         pending: pendingRequests,
         approved: approvedRequests,
-        rejected: rejectedRequests
+        rejected: rejectedRequests,
+        today: todayRequests
       },
 
       subscriptions: {
@@ -76,5 +86,4 @@ export class AnalyticsService {
       }
     };
   }
-
 }

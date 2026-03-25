@@ -1,6 +1,6 @@
-import { Injectable, NotFoundException } from '@nestjs/common';
+import {Injectable,NotFoundException,BadRequestException,} from '@nestjs/common';
 import { InjectModel } from '@nestjs/mongoose';
-import { Model } from 'mongoose';
+import { Model, Types } from 'mongoose';
 import { Category, CategoryDocument } from './schema/category.schema';
 import { CreateCategoryDto } from './dto/create-category.dto';
 import { UpdateCategoryDto } from './dto/update-category.dto';
@@ -13,34 +13,90 @@ export class CategoriesService {
     private categoryModel: Model<CategoryDocument>,
   ) {}
 
-  async create(dto: CreateCategoryDto) {
-    return this.categoryModel.create(dto);
+ 
+  private getHotelAndBranch(user: any) {
+
+    if (!user?.hotelId || !user?.branchId) {
+      throw new BadRequestException('Invalid user token');
+    }
+
+    return {
+      hotelId: new Types.ObjectId(user.hotelId),
+      branchId: new Types.ObjectId(user.branchId),
+    };
   }
 
-  async findAll() {
-    return this.categoryModel.find().sort({ name: 1 });
+
+  async create(dto: CreateCategoryDto, user: any) {
+
+    const { hotelId, branchId } = this.getHotelAndBranch(user);
+
+    const existing = await this.categoryModel.findOne({
+      name: dto.name.trim(),
+      hotelId,
+      branchId,
+    });
+
+    if (existing) {
+      throw new BadRequestException('Category already exists');
+    }
+
+    return this.categoryModel.create({
+      name: dto.name.trim(),
+      hotelId,
+      branchId,
+    });
   }
 
-  async update(id: string, dto: UpdateCategoryDto) {
-    const category = await this.categoryModel.findByIdAndUpdate(
-      id,
-      dto,
-      { new: true },
+ 
+  async findAll(user: any) {
+
+    const { hotelId, branchId } = this.getHotelAndBranch(user);
+
+    return this.categoryModel
+      .find({ hotelId, branchId })
+      .sort({ name: 1 });
+  }
+
+
+  async update(id: string, dto: UpdateCategoryDto, user: any) {
+
+    const { hotelId, branchId } = this.getHotelAndBranch(user);
+
+    const category = await this.categoryModel.findOneAndUpdate(
+      {
+        _id: new Types.ObjectId(id),
+        hotelId,
+        branchId,
+      },
+      {
+        name: dto.name?.trim(),
+      },
+      { new: true }
     );
 
-    if (!category) throw new NotFoundException('Category not found');
+    if (!category) {
+      throw new NotFoundException('Category not found');
+    }
 
     return category;
   }
 
-  async remove(id: string) {
 
-    const category = await this.categoryModel.findByIdAndDelete(id);
+  async remove(id: string, user: any) {
 
-    if (!category) throw new NotFoundException('Category not found');
+    const { hotelId, branchId } = this.getHotelAndBranch(user);
+
+    const category = await this.categoryModel.findOneAndDelete({
+      _id: new Types.ObjectId(id),
+      hotelId,
+      branchId,
+    });
+
+    if (!category) {
+      throw new NotFoundException('Category not found');
+    }
 
     return { message: 'Category deleted successfully' };
-
   }
-
 }

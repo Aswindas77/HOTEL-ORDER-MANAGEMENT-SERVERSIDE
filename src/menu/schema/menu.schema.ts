@@ -1,5 +1,5 @@
 import { Prop, Schema, SchemaFactory } from '@nestjs/mongoose';
-import { Document } from 'mongoose';
+import { Document,Types } from 'mongoose';
 import { FoodType, MenuCategory } from 'src/infrastructure/enums/menu.enum';
 
 export type MenuDocument = Menu & Document;
@@ -24,7 +24,12 @@ export class Menu {
 
   @Prop({ default: true })
   isAvailable: boolean;
+  
+  @Prop({ type: Types.ObjectId, ref: 'Hotel', required: true })
+  hotelId: Types.ObjectId;
 
+  @Prop({ type: Types.ObjectId, ref: 'Branch', required: true })
+  branchId: Types.ObjectId;
 
 }
 

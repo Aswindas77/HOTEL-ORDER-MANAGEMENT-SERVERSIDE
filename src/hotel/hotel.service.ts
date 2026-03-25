@@ -1,7 +1,6 @@
 import { Injectable, NotFoundException } from '@nestjs/common';
 import { InjectModel } from '@nestjs/mongoose';
 import { Model, Types } from 'mongoose';
-
 import { CreateHotelDto } from './dto/create-hotel.dto';
 import { Hotel, HotelDocument } from './schema/hotel.scehma';
 import { User, UserDocument } from 'src/users/schema/user.schema';
@@ -44,12 +43,10 @@ export class HotelService {
 
     const filter: any = {};
 
-    // 🔎 Search filter
     if (search) {
       filter.name = { $regex: search, $options: 'i' };
     }
 
-    // ✅ Status filter
     if (status !== undefined) {
       filter.isActive = status === 'true';
     }
