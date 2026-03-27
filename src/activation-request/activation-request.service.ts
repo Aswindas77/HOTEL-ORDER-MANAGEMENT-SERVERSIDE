@@ -2,6 +2,8 @@ import { Injectable, NotFoundException, BadRequestException } from '@nestjs/comm
 import { InjectModel } from '@nestjs/mongoose';
 import { Model, Types } from 'mongoose';
 import { ActivationRequest, ActivationRequestDocument } from './schema/activation-request.schema';
+import { User, UserDocument } from 'src/users/schema/user.schema';
+import { Hotel, HotelDocument } from 'src/hotel/schema/hotel.scehma';
 
 @Injectable()
 export class ActivationRequestService {
@@ -9,9 +11,16 @@ export class ActivationRequestService {
   constructor(
     @InjectModel(ActivationRequest.name)
     private activationModel: Model<ActivationRequestDocument>,
-  ) {}
 
-  
+    @InjectModel(Hotel.name)
+    private hotelModel: Model<HotelDocument>,
+
+    @InjectModel(User.name)
+    private userModel: Model<UserDocument>,
+
+  ) { }
+
+
   private getContext(user: any) {
     return {
       hotelId: new Types.ObjectId(user.hotelId),
@@ -24,7 +33,7 @@ export class ActivationRequestService {
 
     const { hotelId, branchId } = this.getContext(user);
 
-   
+
     const existing = await this.activationModel.findOne({
       hotelId,
       branchId,
@@ -43,7 +52,7 @@ export class ActivationRequestService {
     });
   }
 
- 
+
   async getRequests(
     user: any,
     page: number = 1,
@@ -51,18 +60,20 @@ export class ActivationRequestService {
     search?: string,
     status?: string
   ) {
-
-    const { hotelId, branchId } = this.getContext(user);
-
     const skip = (page - 1) * limit;
 
-    const filter: any = {
-      hotelId,
-      branchId
-    };
+    const filter: any = {};
+
 
     if (status) {
       filter.status = status;
+    }
+
+
+    if (search) {
+      filter.$or = [
+        { status: { $regex: search, $options: 'i' } }
+      ];
     }
 
     const [results, total] = await Promise.all([
@@ -90,36 +101,50 @@ export class ActivationRequestService {
 
   async approveRequest(id: string, user: any) {
 
-    const { hotelId, branchId } = this.getContext(user);
-
-    const request = await this.activationModel.findOne({
-      _id: new Types.ObjectId(id),
-      hotelId,
-      branchId
-    });
+    const request = await this.activationModel.findById(id);
 
     if (!request) {
       throw new NotFoundException('Request not found');
     }
 
-    request.status = 'approved';
+    if (request.status === 'approved') {
+      throw new BadRequestException('Already approved');
+    }
 
-    return request.save();
+    // ✅ Step 1: Approve request
+    request.status = 'approved';
+    await request.save();
+
+    // ✅ Step 2: Get hotel
+    const hotel = await this.hotelModel.findById(request.hotelId);
+
+    if (!hotel) {
+      throw new NotFoundException('Hotel not found');
+    }
+
+    // ✅ Step 3: Update owner setupStep
+    await this.userModel.findByIdAndUpdate(
+      hotel.ownerId,
+      { setupStep: 6 },
+      { new: true }
+    );
+
+    return request;
   }
 
 
   async rejectRequest(id: string, user: any) {
 
-    const { hotelId, branchId } = this.getContext(user);
-
-    const request = await this.activationModel.findOne({
-      _id: new Types.ObjectId(id),
-      hotelId,
-      branchId
-    });
+    const request = await this.activationModel.findById(
+      new Types.ObjectId(id)
+    );
 
     if (!request) {
       throw new NotFoundException('Request not found');
+    }
+
+    if (request.status === 'rejected') {
+      throw new BadRequestException('Already rejected');
     }
 
     request.status = 'rejected';

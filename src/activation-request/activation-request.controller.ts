@@ -8,14 +8,14 @@ export class ActivationRequestController {
 
   constructor(private readonly activationService: ActivationRequestService) {}
 
-  // ✅ CREATE
+
   @Post()
   @UseGuards(JwtAuthGuard)
   createRequest(@Body() body: CreateActivationRequestDto, @Req() req) {
     return this.activationService.createRequest(req.user, body.subscriptionId);
   }
 
-  // ✅ GET (FILTERED BY HOTEL + BRANCH)
+
   @Get()
   @UseGuards(JwtAuthGuard)
   getRequests(
@@ -28,14 +28,14 @@ export class ActivationRequestController {
     return this.activationService.getRequests(req.user, page, limit, search, status);
   }
 
-  // ✅ APPROVE
+
   @Patch(':id/approve')
   @UseGuards(JwtAuthGuard)
   approve(@Param('id') id: string, @Req() req) {
     return this.activationService.approveRequest(id, req.user);
   }
 
-  // ✅ REJECT
+
   @Patch(':id/reject')
   @UseGuards(JwtAuthGuard)
   reject(@Param('id') id: string, @Req() req) {
