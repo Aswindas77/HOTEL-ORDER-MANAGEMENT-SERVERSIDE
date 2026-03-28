@@ -45,7 +45,7 @@ export class UsersService {
         limit = 10,
         search?: string,
         role?: string,
-        status?: boolean,
+        status?: string,
     ) {
 
         const query: any = {};
@@ -65,7 +65,7 @@ export class UsersService {
 
       
         if (status !== undefined) {
-            query.isActive = status;
+            query.isActive = status === 'true';
         }
 
         const skip = (page - 1) * limit;

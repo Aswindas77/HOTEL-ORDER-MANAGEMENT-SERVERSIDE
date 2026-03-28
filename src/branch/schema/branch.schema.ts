@@ -21,7 +21,7 @@ export class Branch {
   @Prop({ type: Types.ObjectId, ref: 'Hotel', required: true })
   hotelId: Types.ObjectId;
 
-  @Prop({ default: true })
+  @Prop({ default: false })
   isActive: boolean;
 }
 

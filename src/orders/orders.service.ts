@@ -129,7 +129,19 @@ export class OrderService {
       branchId: bId,
     });
 
-    if (!order) throw new NotFoundException('Order not found');
+    if (!order) {
+      throw new NotFoundException('Order not found');
+    }
+    
+      // ❌ block completed if unpaid
+  if (
+    status === OrderStatus.COMPLETED &&
+    order.paymentStatus === PaymentStatus.UNPAID
+  ) {
+    throw new BadRequestException(
+      'Please mark payment before completing order'
+    );
+  }
 
     order.status = status;
     return order.save();

@@ -47,7 +47,7 @@ export class AnalyticsService {
 
       this.hotelModel.countDocuments(),
       this.branchModel.countDocuments(),
-      this.userModel.countDocuments(),
+      this.userModel.countDocuments({ role: 'MANAGER' }),
 
       this.activationModel.countDocuments({ status: 'pending' }),
       this.activationModel.countDocuments({ status: 'approved' }),

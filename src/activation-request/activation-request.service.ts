@@ -4,6 +4,7 @@ import { Model, Types } from 'mongoose';
 import { ActivationRequest, ActivationRequestDocument } from './schema/activation-request.schema';
 import { User, UserDocument } from 'src/users/schema/user.schema';
 import { Hotel, HotelDocument } from 'src/hotel/schema/hotel.scehma';
+import { Branch, BranchDocument } from 'src/branch/schema/branch.schema';
 
 @Injectable()
 export class ActivationRequestService {
@@ -17,6 +18,9 @@ export class ActivationRequestService {
 
     @InjectModel(User.name)
     private userModel: Model<UserDocument>,
+
+    @InjectModel(Branch.name)
+private branchModel: Model<BranchDocument>,
 
   ) { }
 
@@ -128,6 +132,23 @@ export class ActivationRequestService {
       { setupStep: 6 },
       { new: true }
     );
+
+  // ⭐ Step 3: change hotel status to active
+  hotel.isActive = true;
+  await hotel.save();
+
+    // Step 4: activate branch
+  await this.branchModel.findByIdAndUpdate(
+    request.branchId,
+    { isActive: true },
+    { new: true }
+  );
+
+  // Step 5: activate users of this hotel (or branch)
+  await this.userModel.updateMany(
+    { branchId: request.branchId },
+    { isActive: true }
+  );
 
     return request;
   }

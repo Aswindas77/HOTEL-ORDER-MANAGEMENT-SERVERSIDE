@@ -23,7 +23,7 @@ export class User {
   @Prop({ enum: Role, required: true })
   role: Role;
 
-  @Prop({ default: true })
+  @Prop({ default: false })
   isActive: boolean;
 
   @Prop({ default: false })

@@ -21,7 +21,7 @@ export class Hotel {
   @Prop({ type: Types.ObjectId, ref: 'User', required: true })
   ownerId: Types.ObjectId;
 
-  @Prop({ default: true })
+  @Prop({ default: false })
   isActive: boolean;
 }
 

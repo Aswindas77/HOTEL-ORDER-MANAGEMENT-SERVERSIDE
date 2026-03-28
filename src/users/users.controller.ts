@@ -1,4 +1,4 @@
-import { Controller, Get, Post, Body, Param, Patch, Delete,Query } from '@nestjs/common';
+import { Controller, Get, Post, Body, Param, Patch, Delete, Query } from '@nestjs/common';
 import { UsersService } from './users.service';
 import { CreateUserDto } from './dto/create-user.dto';
 import { UpdateUserDto } from './dto/update-user.dto';
@@ -12,22 +12,22 @@ export class UsersController {
         return this.usersService.create(createUserDto);
     }
 
-@Get()
-findAll(
-  @Query('page') page?: number,
-  @Query('limit') limit?: number,
-  @Query('search') search?: string,
-  @Query('role') role?: string,
-  @Query('status') status?: boolean,
-) {
-  return this.usersService.findAll(
-    Number(page) || 1,
-    Number(limit) || 10,
-    search,
-    role,
-    status,
-  );
-}
+    @Get()
+    findAll(
+        @Query('page') page?: number,
+        @Query('limit') limit?: number,
+        @Query('search') search?: string,
+        @Query('role') role?: string,
+        @Query('status') status?: string,
+    ) {
+        return this.usersService.findAll(
+            page,
+            limit,
+            search,
+            role,
+            status
+        );
+    }
 
     @Get(':id')
     findOne(@Param('id') id: string) {
