@@ -1,5 +1,5 @@
 import { Prop, Schema, SchemaFactory } from '@nestjs/mongoose';
-import { Document,Types } from 'mongoose';
+import { Document, Types } from 'mongoose';
 import { FoodType, MenuCategory } from 'src/infrastructure/enums/menu.enum';
 
 export type MenuDocument = Menu & Document;
@@ -16,15 +16,15 @@ export class Menu {
   @Prop({ required: true, min: 0 })
   price: number;
 
-  @Prop({ required: true })
-  category: string;
+  @Prop({ type: Types.ObjectId, ref: 'Category', required: true })
+  category: Types.ObjectId |any;
 
   @Prop({ enum: FoodType, required: true })
   foodType: FoodType;
 
   @Prop({ default: true })
   isAvailable: boolean;
-  
+
   @Prop({ type: Types.ObjectId, ref: 'Hotel', required: true })
   hotelId: Types.ObjectId;
 

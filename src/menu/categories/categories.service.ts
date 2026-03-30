@@ -99,4 +99,10 @@ export class CategoriesService {
 
     return { message: 'Category deleted successfully' };
   }
+
+  async findAllByBranch(branchId: Types.ObjectId) {
+  return this.categoryModel
+    .find({ branchId })
+    .sort({ name: 1 });
+}
 }

@@ -14,7 +14,7 @@ export class CreateMenuDto {
     @Min(0)
     price: number;
 
-    @IsString()
+    @IsMongoId() 
     category: string;
 
     @IsEnum(FoodType)

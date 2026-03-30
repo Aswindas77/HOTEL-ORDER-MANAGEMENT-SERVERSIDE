@@ -20,7 +20,7 @@ export class ActivationRequestService {
     private userModel: Model<UserDocument>,
 
     @InjectModel(Branch.name)
-private branchModel: Model<BranchDocument>,
+    private branchModel: Model<BranchDocument>,
 
   ) { }
 
@@ -130,25 +130,24 @@ private branchModel: Model<BranchDocument>,
     await this.userModel.findByIdAndUpdate(
       hotel.ownerId,
       { setupStep: 6 },
-      { new: true }
+      { returnDocument: 'after' }
     );
 
-  // ⭐ Step 3: change hotel status to active
-  hotel.isActive = true;
-  await hotel.save();
+    hotel.isActive = true;
+    await hotel.save();
 
-    // Step 4: activate branch
-  await this.branchModel.findByIdAndUpdate(
-    request.branchId,
-    { isActive: true },
-    { new: true }
-  );
 
-  // Step 5: activate users of this hotel (or branch)
-  await this.userModel.updateMany(
-    { branchId: request.branchId },
-    { isActive: true }
-  );
+    await this.branchModel.findByIdAndUpdate(
+      request.branchId,
+      { isActive: true },
+      { returnDocument: 'after' }
+    );
+
+
+    await this.userModel.updateMany(
+      { branchId: request.branchId },
+      { isActive: true }
+    );
 
     return request;
   }
@@ -168,8 +167,52 @@ private branchModel: Model<BranchDocument>,
       throw new BadRequestException('Already rejected');
     }
 
-    request.status = 'rejected';
 
-    return request.save();
+    request.status = 'rejected';
+    await request.save();
+
+
+    const hotel = await this.hotelModel.findById(request.hotelId);
+
+    if (!hotel) {
+      throw new NotFoundException('Hotel not found');
+    }
+
+    await this.userModel.findByIdAndUpdate(
+      hotel.ownerId,
+      { setupStep: 5 },
+      { returnDocument: 'after' }
+    );
+    hotel.isActive = false;
+    await hotel.save();
+
+    await this.branchModel.findByIdAndUpdate(
+      request.branchId,
+      { isActive: false },
+      { returnDocument: 'after' }
+    );
+
+    await this.userModel.updateMany(
+      { branchId: request.branchId },
+      { isActive: false }
+    );
+
+    return {
+      message: 'Request rejected successfully',
+      request
+    };
+  }
+
+  async getMyLatestRequest(user: any) {
+
+    const { hotelId, branchId } = this.getContext(user);
+
+    return this.activationModel
+      .findOne({
+        hotelId,
+        branchId
+      })
+      .sort({ createdAt: -1 });
+
   }
 }

@@ -1,4 +1,4 @@
-import { Controller, Post, Body, Patch, Req, UseGuards } from '@nestjs/common';
+import { Controller, Post, Body, Patch, Req, UseGuards, Get } from '@nestjs/common';
 import { AuthService } from './auth.service';
 import { LoginDto } from './dto/login.dto';
 import { RegisterDto } from './dto/register.dto';
@@ -26,5 +26,11 @@ updateSetupStep(@Body() body, @Req() req) {
     body.setupStep,
     body.hotelId
   );
+}
+
+@UseGuards(AuthGuard('jwt'))
+@Get('me')
+getMe(@Req() req) {
+  return this.authService.getProfile(req.user.userId);
 }
 }
