@@ -18,13 +18,13 @@ import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
 export class OrderController {
   constructor(private readonly orderService: OrderService) {}
 
-  // ✅ CREATE (public - via table token)
+  //  CREATE (public - via table token)
   @Post()
   create(@Body() dto: CreateOrderDto) {
     return this.orderService.create(dto);
   }
 
-  // ✅ UPDATE STATUS
+  //  UPDATE STATUS
   @Patch(':id/status')
   @UseGuards(JwtAuthGuard)
   updateStatus(
@@ -36,7 +36,7 @@ export class OrderController {
     return this.orderService.updateStatus(id, status, req.user, branchId);
   }
 
-  // ✅ MARK PAID
+  // MARK PAID
   @Patch(':id/pay')
   @UseGuards(JwtAuthGuard)
   markPaid(
@@ -47,7 +47,7 @@ export class OrderController {
     return this.orderService.markAsPaid(id, req.user, branchId);
   }
 
-  // ✅ MARK UNPAID
+  //  MARK UNPAID
   @Patch(':id/unpay')
   @UseGuards(JwtAuthGuard)
   markUnpaid(
@@ -58,7 +58,7 @@ export class OrderController {
     return this.orderService.markAsUnpaid(id, req.user, branchId);
   }
 
-  // ✅ CHEF ORDERS
+  //  CHEF ORDERS
   @Get('chef')
   @UseGuards(JwtAuthGuard)
   chefOrders(
@@ -83,7 +83,7 @@ export class OrderController {
     );
   }
 
-  // ✅ MANAGER ORDERS
+  //  MANAGER ORDERS
   @Get('manager')
   @UseGuards(JwtAuthGuard)
   managerOrders(
@@ -100,7 +100,7 @@ export class OrderController {
     );
   }
 
-  // ✅ ALL ORDERS
+  //  ALL ORDERS
   @Get()
   @UseGuards(JwtAuthGuard)
   getOrders(

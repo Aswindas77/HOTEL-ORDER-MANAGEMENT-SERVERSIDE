@@ -30,7 +30,7 @@ export class TablesController {
     return this.tablesService.create(dto, req.user);
   }
 
-  // ✅ FIXED
+  //  FIXED
   @Get()
   @UseGuards(JwtAuthGuard)
   findAll(
@@ -51,7 +51,7 @@ export class TablesController {
     );
   }
 
-  // ✅ FIXED
+  //  FIXED
   @Get(':id')
   @UseGuards(JwtAuthGuard)
   findOne(
@@ -62,7 +62,7 @@ export class TablesController {
     return this.tablesService.findOne(id, req.user, branchId);
   }
 
-  // ✅ FIXED
+  //  FIXED
   @Patch(':id')
   @UseGuards(JwtAuthGuard)
   update(
@@ -74,7 +74,7 @@ export class TablesController {
     return this.tablesService.update(id, dto, req.user, branchId);
   }
 
-  // ✅ FIXED
+  //  FIXED
   @Delete(':id')
   @UseGuards(JwtAuthGuard)
   remove(
@@ -85,7 +85,7 @@ export class TablesController {
     return this.tablesService.remove(id, req.user, branchId);
   }
 
-  // ✅ FIXED
+  //  FIXED
   @Patch(':id/open')
   @UseGuards(JwtAuthGuard)
   open(
@@ -96,7 +96,7 @@ export class TablesController {
     return this.tablesService.openTable(id, req.user, branchId);
   }
 
-  // ✅ FIXED
+  //  FIXED
   @Patch(':id/close')
   @UseGuards(JwtAuthGuard)
   close(

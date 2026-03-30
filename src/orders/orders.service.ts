@@ -90,7 +90,7 @@ export class OrderService {
     });
   }
 
-  // ───────── COMMON CONTEXT (FIXED 🔥) ─────────
+  // ───────── COMMON CONTEXT  ─────────
 
   private async getContext(user: any, branchId: string) {
     const dbUser = await this.userModel.findById(
@@ -99,7 +99,7 @@ export class OrderService {
 
     if (!dbUser) throw new NotFoundException('User not found');
 
-    // 🔥 FIX: VALIDATION ADDED
+    //  VALIDATION ADDED
     if (!branchId || !Types.ObjectId.isValid(branchId)) {
       throw new BadRequestException('Invalid branchId');
     }
@@ -133,7 +133,7 @@ export class OrderService {
       throw new NotFoundException('Order not found');
     }
     
-      // ❌ block completed if unpaid
+      //  block completed if unpaid
   if (
     status === OrderStatus.COMPLETED &&
     order.paymentStatus === PaymentStatus.UNPAID

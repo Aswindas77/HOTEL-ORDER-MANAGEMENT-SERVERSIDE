@@ -115,18 +115,18 @@ export class ActivationRequestService {
       throw new BadRequestException('Already approved');
     }
 
-    // ✅ Step 1: Approve request
+    //  Step 1: Approve request
     request.status = 'approved';
     await request.save();
 
-    // ✅ Step 2: Get hotel
+    //  Step 2: Get hotel
     const hotel = await this.hotelModel.findById(request.hotelId);
 
     if (!hotel) {
       throw new NotFoundException('Hotel not found');
     }
 
-    // ✅ Step 3: Update owner setupStep
+    //  Step 3: Update owner setupStep
     await this.userModel.findByIdAndUpdate(
       hotel.ownerId,
       { setupStep: 6 },

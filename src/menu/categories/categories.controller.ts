@@ -19,21 +19,21 @@ import { JwtAuthGuard } from 'src/auth/guards/jwt-auth.guard';
 export class CategoriesController {
   constructor(private readonly categoriesService: CategoriesService) {}
 
-  // ✅ CREATE
+  //  CREATE
   @Post()
   @UseGuards(JwtAuthGuard)
   create(@Body() dto: CreateCategoryDto, @Req() req) {
     return this.categoriesService.create(dto, req.user);
   }
 
-  // ✅ GET ALL (hotel-based)
+  //  GET ALL (hotel-based)
   @Get()
   @UseGuards(JwtAuthGuard)
   findAll(@Req() req) {
     return this.categoriesService.findAll(req.user);
   }
 
-  // ✅ UPDATE
+  //  UPDATE
   @Patch(':id')
   @UseGuards(JwtAuthGuard)
   update(
@@ -44,7 +44,7 @@ export class CategoriesController {
     return this.categoriesService.update(id, dto, req.user);
   }
 
-  // ✅ DELETE
+  //  DELETE
   @Delete(':id')
   @UseGuards(JwtAuthGuard)
   remove(@Param('id') id: string, @Req() req) {
