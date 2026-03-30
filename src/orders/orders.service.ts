@@ -28,8 +28,6 @@ export class OrderService {
     private userModel: Model<UserDocument>,
   ) {}
 
-  // ───────── CREATE ORDER ─────────
-
   async create(dto: CreateOrderDto) {
     const table = await this.tableModel.findOne({
       accessToken: dto.tableToken.toLowerCase(),
@@ -90,8 +88,6 @@ export class OrderService {
     });
   }
 
-  // ───────── COMMON CONTEXT  ─────────
-
   private async getContext(user: any, branchId: string) {
     const dbUser = await this.userModel.findById(
       user.userId.toString(),
@@ -99,7 +95,6 @@ export class OrderService {
 
     if (!dbUser) throw new NotFoundException('User not found');
 
-    //  VALIDATION ADDED
     if (!branchId || !Types.ObjectId.isValid(branchId)) {
       throw new BadRequestException('Invalid branchId');
     }
@@ -109,8 +104,6 @@ export class OrderService {
       branchId: new Types.ObjectId(branchId),
     };
   }
-
-  // ───────── UPDATE STATUS ─────────
 
   async updateStatus(
     id: string,
@@ -132,8 +125,7 @@ export class OrderService {
     if (!order) {
       throw new NotFoundException('Order not found');
     }
-    
-      //  block completed if unpaid
+
   if (
     status === OrderStatus.COMPLETED &&
     order.paymentStatus === PaymentStatus.UNPAID
@@ -146,8 +138,6 @@ export class OrderService {
     order.status = status;
     return order.save();
   }
-
-  // ───────── PAYMENT ─────────
 
   async markAsPaid(id: string, user: any, branchId: string) {
     const { hotelId, branchId: bId } = await this.getContext(
@@ -184,8 +174,6 @@ export class OrderService {
     order.paymentStatus = PaymentStatus.UNPAID;
     return order.save();
   }
-
-  // ───────── CHEF ORDERS ─────────
 
   async getChefOrders(
     user: any,
@@ -255,8 +243,6 @@ export class OrderService {
     };
   }
 
-  // ───────── MANAGER ORDERS ─────────
-
   async getManagerOrders(
     user: any,
     branchId: string,
@@ -294,8 +280,6 @@ export class OrderService {
       data: orders,
     };
   }
-
-  // ───────── ALL ORDERS (FIXED 🔥) ─────────
 
   async getOrders(
     user: any,

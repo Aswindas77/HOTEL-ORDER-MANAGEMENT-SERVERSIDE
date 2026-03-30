@@ -26,7 +26,6 @@ export class MenuService {
         private categoriesservice: CategoriesService,
     ) { }
 
-    // ✅ Safe ObjectId converter
     private toObjectId(id: any): Types.ObjectId {
         if (!id) {
             throw new BadRequestException('ObjectId missing');
@@ -45,7 +44,6 @@ export class MenuService {
         return new Types.ObjectId(id);
     }
 
-    // ✅ CREATE MENU
     async create(dto: CreateMenuDto) {
 
         const hotelId = this.toObjectId(dto.hotelId);
@@ -67,11 +65,10 @@ export class MenuService {
             name: dto.name.trim(),
             hotelId,
             branchId,
-            category: this.toObjectId(dto.category), // ✅ FIXED
+            category: this.toObjectId(dto.category), 
         });
     }
 
-    // ✅ GET MENUS (USER SIDE)
     async findAll(
         hotelId: string,
         branchId: string,
@@ -86,7 +83,7 @@ export class MenuService {
             isAvailable: true,
         };
 
-        if (category) filter.category = this.toObjectId(category); // ✅ FIXED
+        if (category) filter.category = this.toObjectId(category); 
         if (foodType) filter.foodType = foodType;
 
         if (search) {
@@ -96,7 +93,6 @@ export class MenuService {
         return this.menuModel.find(filter).populate('category');
     }
 
-    // ✅ GET ONE MENU
     async findOne(id: string, hotelId: string, branchId: string) {
 
         const menu = await this.menuModel.findOne({
@@ -112,7 +108,6 @@ export class MenuService {
         return menu;
     }
 
-    // ✅ UPDATE MENU
     async update(
         id: string,
         dto: UpdateMenuDto,
@@ -120,7 +115,6 @@ export class MenuService {
         branchId: string
     ) {
 
-        // ✅ Find menu with proper ObjectId conversion
         const menu = await this.menuModel.findOne({
             _id: this.toObjectId(id),
             hotelId: this.toObjectId(hotelId),
@@ -131,26 +125,21 @@ export class MenuService {
             throw new NotFoundException('Menu item not found');
         }
 
-        // ✅ Create clean update object (DO NOT MODIFY DTO)
         const updateData: any = {
             ...dto,
-            hotelId: this.toObjectId(hotelId),   // 🔥 force ObjectId
-            branchId: this.toObjectId(branchId), // 🔥 force ObjectId
+            hotelId: this.toObjectId(hotelId),   
+            branchId: this.toObjectId(branchId), 
         };
 
-        // ✅ Convert category if exists
         if (dto.category) {
             updateData.category = this.toObjectId(dto.category);
         }
 
-        // ✅ Assign safely
         Object.assign(menu, updateData);
 
-        // ✅ Save
         return menu.save();
     }
 
-    // ✅ DISABLE MENU
     async disable(id: string, hotelId: string, branchId: string) {
 
         const menu = await this.menuModel.findOne({
@@ -167,7 +156,6 @@ export class MenuService {
         return menu.save();
     }
 
-    // ✅ ENABLE MENU
     async enable(id: string, hotelId: string, branchId: string) {
 
         const menu = await this.menuModel.findOne({
@@ -184,7 +172,6 @@ export class MenuService {
         return menu.save();
     }
 
-    // ✅ ADMIN SIDE MENU
     async findAllForAdmin(
         category?: string,
         foodType?: string,
@@ -213,7 +200,6 @@ export class MenuService {
         return this.menuModel.find(filter).populate('category');
     }
 
-    // ✅ MENU FOR TABLE (QR)
     async getMenuByTable(
         token: string,
         category?: string,
@@ -246,21 +232,17 @@ export class MenuService {
             filter.name = { $regex: search, $options: 'i' };
         }
 
-        // ✅ MENU
         const menu = await this.menuModel
             .find(filter)
             .populate('category');
 
-        // ✅ ALL CATEGORIES
         const categories = await this.categoriesservice.findAllByBranch(
             table.branchId
         );
 
-        // 🔥 NEW PART (IMPORTANT)
         const hotel = await this.hotelModel.findById(table.hotelId);
         const branch = await this.branchModel.findById(table.branchId);
 
-        // ✅ FINAL RESPONSE
         return {
             menu,
             categories,

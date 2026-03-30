@@ -10,19 +10,16 @@ export class BranchController {
     
   ) { }
 
-  // CREATE BRANCH
   @Post()
   createBranch(@Body() body: CreateBranchDto) {
     return this.branchService.createBranch(body);
   }
 
-  // GET ALL BRANCHES
   @Get()
   getBranches() {
     return this.branchService.findAllBranches();
   }
 
-  // GET BRANCH BY ID
   @Get(':id')
   getBranch(@Param('id') id: string) {
     return this.branchService.findBranchById(id);

@@ -84,20 +84,17 @@ export class DashboardService {
     let start: Date;
     let end: Date = now;
 
-    // Custom filter
     if (startDate && endDate) {
       start = new Date(startDate);
       end = new Date(endDate);
       end.setHours(23, 59, 59, 999);
     }
 
-    // Week default (last 7 days)
     else if (period === 'week') {
       start = new Date();
       start.setDate(now.getDate() - 6);
     }
 
-    // Month default (last 30 days)
     else if (period === 'month') {
       start = new Date();
       start.setDate(now.getDate() - 29);
@@ -108,7 +105,6 @@ export class DashboardService {
       start.setDate(now.getDate() - 6);
     }
 
-    // Decide grouping field
     let groupField: any;
     let labels: string[];
 
@@ -267,7 +263,6 @@ export class DashboardService {
 
     const data = await this.orderModel.aggregate([
 
-      // 1. Filter today's orders
       {
         $match: {
           ...filter,
@@ -275,12 +270,10 @@ export class DashboardService {
         }
       },
 
-      // 2. Unwind items array
       {
         $unwind: "$items"
       },
 
-      // 3. Group by item name
       {
         $group: {
           _id: "$items.name",
@@ -289,12 +282,10 @@ export class DashboardService {
         }
       },
 
-      // 4. Sort by most ordered
       {
         $sort: { totalOrders: -1 }
       },
 
-      // 5. Limit top 5
       {
         $limit: 5
       }
@@ -355,7 +346,6 @@ export class DashboardService {
 
 ]);
 
-    // 4. Calculate percentage
     const total = data.reduce((sum, item) => sum + item.count, 0);
 
     return data.map(item => ({
