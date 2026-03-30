@@ -321,50 +321,39 @@ export class DashboardService {
 
     const data = await this.menuModel.aggregate([
 
-      {
-        $match: filter
-      },
+  { $match: filter },
 
-      // 1. Normalize category
-      {
-        $project: {
-          category: { $toLower: "$category" }
-        }
-      },
+ 
+  {
+    $lookup: {
+      from: "categories",
+      localField: "category",
+      foreignField: "_id",
+      as: "categoryData"
+    }
+  },
 
-      // 2. Group by category
-      {
-        $group: {
-          _id: "$category",
-          count: { $sum: 1 }
-        }
-      },
+  {
+    $unwind: "$categoryData"
+  },
 
-      // 3. Fix names (important)
-      {
-        $project: {
-          name: {
-            $switch: {
-              branches: [
-                { case: { $eq: ["$_id", "desert"] }, then: "Dessert" },
-                { case: { $eq: ["$_id", "main_course"] }, then: "Main Course" }
-              ],
-              default: {
-                $concat: [
-                  { $toUpper: { $substrCP: ["$_id", 0, 1] } },
-                  { $substrCP: ["$_id", 1, { $strLenCP: "$_id" }] }
-                ]
-              }
-            }
-          },
-          count: 1,
-          _id: 0
-        }
-      },
+  
+  {
+    $project: {
+      category: { $toLower: "$categoryData.name" }
+    }
+  },
 
-      { $sort: { count: -1 } }
+  {
+    $group: {
+      _id: "$category",
+      count: { $sum: 1 }
+    }
+  },
 
-    ]);
+  { $sort: { count: -1 } }
+
+]);
 
     // 4. Calculate percentage
     const total = data.reduce((sum, item) => sum + item.count, 0);
