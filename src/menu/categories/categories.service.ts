@@ -1,4 +1,4 @@
-import {Injectable,NotFoundException,BadRequestException,} from '@nestjs/common';
+import { Injectable, NotFoundException, BadRequestException, } from '@nestjs/common';
 import { InjectModel } from '@nestjs/mongoose';
 import { Model, Types } from 'mongoose';
 import { Category, CategoryDocument } from './schema/category.schema';
@@ -11,9 +11,9 @@ export class CategoriesService {
   constructor(
     @InjectModel(Category.name)
     private categoryModel: Model<CategoryDocument>,
-  ) {}
+  ) { }
 
- 
+
   private getHotelAndBranch(user: any) {
 
     if (!user?.hotelId || !user?.branchId) {
@@ -31,10 +31,11 @@ export class CategoriesService {
 
     const { hotelId, branchId } = this.getHotelAndBranch(user);
 
+    const name = dto.name.trim();
     const existing = await this.categoryModel.findOne({
-      name: dto.name.trim(),
       hotelId,
       branchId,
+      name: { $regex: `^${name}$`, $options: 'i' }
     });
 
     if (existing) {
@@ -48,7 +49,7 @@ export class CategoriesService {
     });
   }
 
- 
+
   async findAll(user: any) {
 
     const { hotelId, branchId } = this.getHotelAndBranch(user);
@@ -63,6 +64,21 @@ export class CategoriesService {
 
     const { hotelId, branchId } = this.getHotelAndBranch(user);
 
+    const name = dto.name?.trim();
+
+    if (name) {
+      const existing = await this.categoryModel.findOne({
+        _id: { $ne: new Types.ObjectId(id) },
+        hotelId,
+        branchId,
+        name: { $regex: `^${name}$`, $options: 'i' }
+      });
+
+      if (existing) {
+        throw new BadRequestException('Category already exists');
+      }
+    }
+
     const category = await this.categoryModel.findOneAndUpdate(
       {
         _id: new Types.ObjectId(id),
@@ -70,7 +86,7 @@ export class CategoriesService {
         branchId,
       },
       {
-        name: dto.name?.trim(),
+        name,
       },
       { new: true }
     );
@@ -101,8 +117,8 @@ export class CategoriesService {
   }
 
   async findAllByBranch(branchId: Types.ObjectId) {
-  return this.categoryModel
-    .find({ branchId })
-    .sort({ name: 1 });
-}
+    return this.categoryModel
+      .find({ branchId })
+      .sort({ name: 1 });
+  }
 }
