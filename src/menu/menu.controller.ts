@@ -74,13 +74,18 @@ export class MenuController {
   }
 
   @Patch(':id')
+  @UseGuards(JwtAuthGuard)
   update(
     @Param('id') id: string,
     @Body() dto: UpdateMenuDto,
-    @Query('hotelId') hotelId: string,
-    @Query('branchId') branchId: string,
+    @Req() req
   ) {
-    return this.menuService.update(id, dto, hotelId, branchId);
+    return this.menuService.update(
+      id,
+      dto,
+      req.user.hotelId,
+      req.user.branchId
+    );
   }
 
   @Patch(':id/disable')

@@ -6,7 +6,7 @@ import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
 @Controller('activation-request')
 export class ActivationRequestController {
 
-  constructor(private readonly activationService: ActivationRequestService) {}
+  constructor(private readonly activationService: ActivationRequestService) { }
 
 
   @Post()
@@ -40,5 +40,11 @@ export class ActivationRequestController {
   @UseGuards(JwtAuthGuard)
   reject(@Param('id') id: string, @Req() req) {
     return this.activationService.rejectRequest(id, req.user);
+  }
+
+  @UseGuards(JwtAuthGuard)
+  @Get('my')
+  getMyRequest(@Req() req) {
+    return this.activationService.getMyLatestRequest(req.user);
   }
 }
