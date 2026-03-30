@@ -132,6 +132,7 @@ export class DashboardService {
     const data = await this.orderModel.aggregate([
       {
         $match: {
+          ...filter,
           createdAt: { $gte: start, $lte: end }
         }
       },
